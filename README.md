@@ -38,6 +38,7 @@ nvimux.bindings.bind_all{
   {'s', ':NvimuxHorizontalSplit', {'n', 'v', 'i', 't'}},
   {'v', ':NvimuxVerticalSplit', {'n', 'v', 'i', 't'}},
 }
+EOF
 ```
 
 On viml, the variables can be defined using the same name, prepending `nvimux_` to it:
