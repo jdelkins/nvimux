@@ -291,29 +291,31 @@ end
  -- ]]
 -- ]
 
--- [ Runtime and warmup
-for i=1, 9 do
-  bindings.mappings[i] = { nvit = {i .. 'gt'}}
-end
-
-for key, cmd in pairs(bindings.mappings) do
-  for modes, data in pairs(cmd) do
-    modes = fns.split(modes)
-    local arg, action = unpack(data)
-    local binds = {
-      ['key'] = key,
-      ['modes'] = modes,
-    }
-    if type(arg) == 'function' or action ~= nil then
-      bindings.map_table[key] = {['arg'] = arg, ['action'] = action}
-      binds.value = ':lua require("nvimux").mapped{key = "' .. key .. '"}'
-    else
-      binds.value = arg
+nvimux.bootstrap = function()
+    for i=1, 9 do
+      bindings.mappings[i] = { nvit = {i .. 'gt'}}
     end
-    nvimux.bindings.bind(binds)
-  end
+
+    for key, cmd in pairs(bindings.mappings) do
+      for modes, data in pairs(cmd) do
+        modes = fns.split(modes)
+        local arg, action = unpack(data)
+        local binds = {
+          ['key'] = key,
+          ['modes'] = modes,
+        }
+        if type(arg) == 'function' or action ~= nil then
+          bindings.map_table[key] = {['arg'] = arg, ['action'] = action}
+          binds.value = ':lua require("nvimux").mapped{key = "' .. key .. '"}'
+        else
+          binds.value = arg
+        end
+        nvimux.bindings.bind(binds)
+      end
+    end
 end
 -- ]
 
+nvim.nvim_command([[au VimEnter * lua require('nvimux').bootstrap()]])
 
 return nvimux
