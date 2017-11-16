@@ -247,7 +247,10 @@ end
 
 nvimux.bindings.bind_all = function(options)
   for _, bind in ipairs(options) do
-    fns.bind._(unpack(bind))
+    local key, cmd, modes = unpack(bind)
+    local tbl = {}
+    tbl[table.concat(modes, "")] = { cmd }
+    bindings.mappings[key]=tbl
   end
 end
 
