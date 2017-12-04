@@ -41,7 +41,8 @@ local vars = {
   quickterm_orientation = 'vertical',
   quickterm_size = '',
   new_term = 'term',
-  close_term = ':x'
+  close_term = ':x',
+  new_window = 'enew'
 }
 
 vars.split_type = function(t)
@@ -77,6 +78,12 @@ local bindings = {
   map_table    = {}
 }
 
+local nvimux_commands = {
+  {name = 'NvimuxHorizontalSplit', lazy_cmd = function() return [[spl|wincmd j|]] .. vars.new_window end},
+  {name = 'NvimuxVerticalSplit', lazy_cmd = function() return [[spl|wincmd j|]] .. vars.new_window end},
+  {name = 'NvimuxNewTab', lazy_cmd = function() return [[tabe|]] .. vars.new_window end},
+}
+
 -- ]]
 
 setmetatable(vars, nvim_proxy)
@@ -84,6 +91,16 @@ setmetatable(vars, nvim_proxy)
 -- ]
 
 -- [ Private functions
+-- [[ Commands definition
+fns.build_cmd = function(options)
+  nargs = options.nargs or 0
+  cmd = options.cmd or options.lazy_cmd()
+  name = options.name
+
+  nvim.nvim_command('command! -nargs=' .. nargs .. ' ' .. name .. ' ' .. cmd)
+end
+
+-- ]]
 -- [[ keybind commands
 fns.bind_fn = function(options)
     local prefix = options.prefix  or ''
@@ -297,6 +314,10 @@ end
 nvimux.bootstrap = function()
     for i=1, 9 do
       bindings.mappings[i] = { nvit = {i .. 'gt'}}
+    end
+
+    for _, cmd in ipairs(nvimux_commands) do
+      fns.build_cmd(cmd)
     end
 
     for key, cmd in pairs(bindings.mappings) do
