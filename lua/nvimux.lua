@@ -72,8 +72,8 @@ local bindings = {
     ['[']      = { t    = {''}},
     [']']      = { nvit = {':NvimuxTermPaste'}},
     [',']      = { t    = {'', nvimux.term.prompt.rename}},
-    ['c']      = { nvit = {function() return ':tabe | ' .. vars.new_term end}},
-    ['t']      = { nvit = {':tabe'}},
+    ['c']      = { nvit = {':NvimuxNewTab'}},
+    ['t']      = { nvit = {':echom "Deprecated mapping. set `new_window` or remap this." \\| silent tabe'}},
   },
   map_table    = {}
 }
