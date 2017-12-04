@@ -82,6 +82,7 @@ local nvimux_commands = {
   {name = 'NvimuxHorizontalSplit', lazy_cmd = function() return [[spl|wincmd j|]] .. vars.new_window end},
   {name = 'NvimuxVerticalSplit', lazy_cmd = function() return [[vspl|wincmd l|]] .. vars.new_window end},
   {name = 'NvimuxNewTab', lazy_cmd = function() return [[tabe|]] .. vars.new_window end},
+  {name = 'NvimuxSet', cmd = [[lua require('nvimux').config.set_fargs(<f-args>)]], nargs='+'},
 }
 
 -- ]]
@@ -206,6 +207,11 @@ end
 nvimux.config.set = function(options)
   vars[options.key] = options.value
   nvim.nvim_set_var('nvimux_' .. options.key, options.value)
+  nvimux.bootstrap()
+end
+
+nvimux.config.set_fargs = function(key, value)
+  nvimux.config.set{key=key, value=value}
 end
 
 nvimux.config.set_all = function(options)
@@ -337,6 +343,7 @@ nvimux.bootstrap = function()
         nvimux.bindings.bind(binds)
       end
     end
+    fns.build_cmd{name = 'NvimuxReload', cmd = 'lua require("nvimux").bootstrap()'}
 end
 -- ]
 
