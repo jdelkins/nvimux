@@ -38,6 +38,9 @@ nvimux.bindings.bind_all{
   {'s', ':NvimuxHorizontalSplit', {'n', 'v', 'i', 't'}},
   {'v', ':NvimuxVerticalSplit', {'n', 'v', 'i', 't'}},
 }
+
+-- Required so nvimux sets the mappings correctly
+nvimux.bootstrap()
 EOF
 ```
 

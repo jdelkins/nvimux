@@ -211,14 +211,12 @@ end
 
 nvimux.config.set_fargs = function(key, value)
   nvimux.config.set{key=key, value=value}
-  nvimux.bootstrap()
 end
 
 nvimux.config.set_all = function(options)
   for key, value in pairs(options) do
     nvimux.config.set{['key'] = key, ['value'] = value}
   end
-  nvimux.bootstrap()
 end
 -- ]]
 
