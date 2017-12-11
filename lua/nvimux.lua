@@ -348,6 +348,5 @@ nvimux.bootstrap = function()
 end
 -- ]
 
-nvim.nvim_command([[au VimEnter * lua require('nvimux').bootstrap()]])
 
 return nvimux

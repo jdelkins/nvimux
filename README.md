@@ -41,6 +41,11 @@ nvimux.bindings.bind_all{
 EOF
 ```
 
+In case you don't set configuration options, please do run the following for nvimux to work:
+```lua
+lua require('nvimux').bootstrap()
+```
+
 On viml, the variables can be defined using the same name, prepending `nvimux_` to it:
 
 ```viml
