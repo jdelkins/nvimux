@@ -107,8 +107,8 @@ fns.bind_fn = function(options)
     local prefix = options.prefix  or ''
     local mode = options.mode
   return function(key, command)
-    local suffix = string.sub(command, 1, 1) == ':' and '<CR>' or ''
-    nvim.nvim_command(mode .. 'noremap <silent> ' .. vars.prefix .. key .. ' ' .. prefix .. command .. suffix)
+      local suffix = string.sub(command, 1, 1) == ':' and '<CR>' or ''
+      nvim.nvim_command(mode .. 'noremap <silent> ' .. vars.prefix .. key .. ' ' .. prefix .. command .. suffix)
   end
 end
 
@@ -207,17 +207,18 @@ end
 nvimux.config.set = function(options)
   vars[options.key] = options.value
   nvim.nvim_set_var('nvimux_' .. options.key, options.value)
-  nvimux.bootstrap()
 end
 
 nvimux.config.set_fargs = function(key, value)
   nvimux.config.set{key=key, value=value}
+  nvimux.bootstrap()
 end
 
 nvimux.config.set_all = function(options)
   for key, value in pairs(options) do
     nvimux.config.set{['key'] = key, ['value'] = value}
   end
+  nvimux.bootstrap()
 end
 -- ]]
 
