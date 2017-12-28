@@ -17,7 +17,7 @@ Nvimux is just a series of keybindings to allow neovim to work similarly to
 TMUX.
 
 Most of the common commands should be implemented and it should be no trouble
-setting up new commands in case you miss something
+setting up new commands in case you miss something.
 
 =============================================================================
 Awesomeness                                              *nvimux-awesomeness*
@@ -30,9 +30,7 @@ implemented in tmux.
 
 Quick Terminal                               *nvimux_quick-term* *quick-term*
                   Nvimux allows a quick terminal to be available through all
-                  tabs through the shortcut |nvimux-prefix|q. It will open
-                  the same shared terminal on all windows. If using |neoterm|,
-                  will make use of |Ttoggle|.
+                  tabs through the shortcut |nvimux-prefix|q.
 
 =============================================================================
 Commands                                                    *nvimux-commands*
@@ -136,7 +134,7 @@ g:nvimux_open_term_by_default                 *g:nvimux_open_term_by_default*
 g:nvimux_override_{command}                        *g:nvomux_override_command*
                   Allows overriding commands with custom commands:
                   Example >
-                    let g:nvimux_override_c = 'echomsg "Open new tab" | tabe'
+                    let g:nvimux_override_c = ':echomsg "Open tab" \| tabe'
 
 g:nvimux_custom_bindings                            *g:nvimux_custom_bindings*
                   Allows custom bindings using nvimux's bind function.
