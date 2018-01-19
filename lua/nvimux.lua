@@ -308,11 +308,9 @@ end
 
 nvimux.mapped = function(options)
   local mapping = bindings.map_table[options.key]
-  local action = mapping.action or nvim.nvim_command
-  if type(mapping.arg) == 'function' then
-     action(mapping.arg())
-  else
-     action(mapping.arg)
+  local ret = mapping.arg()
+  if ret ~= '' then
+    nvim.nvim_command(ret)
   end
 end
  -- ]]
