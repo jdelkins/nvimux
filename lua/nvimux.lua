@@ -329,15 +329,13 @@ nvimux.bootstrap = function()
     end
 
     for key, cmd in pairs(bindings.mappings) do
-      for modes, data in pairs(cmd) do
+      for modes, binds in pairs(cmd) do
         modes = fns.split(modes)
-        local arg, action = unpack(data)
-        local binds = {
-          ['key'] = key,
-          ['modes'] = modes,
-        }
-        if type(arg) == 'function' or action ~= nil then
-          bindings.map_table[key] = {['arg'] = arg, ['action'] = action}
+        local arg = table.remove(binds, 1)
+        binds.key = key
+        binds.modes = modes
+        if type(arg) == 'function' then
+          bindings.map_table[key] = {['arg'] = arg, ['action'] = nil}
           binds.mapping = ':lua require("nvimux").mapped{key = "' .. key .. '"}'
         else
           binds.mapping = arg
