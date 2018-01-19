@@ -68,7 +68,7 @@ local bindings = {
     ['j']      = { nvit = {'<C-w><C-j>'}},
     ['k']      = { nvit = {'<C-w><C-k>'}},
     ['l']      = { nvit = {'<C-w><C-l>'}},
-    [':']      = { t    = {':'}},
+    [':']      = { t    = {':', suffix = ''}},
     ['[']      = { t    = {''}},
     [']']      = { nvit = {':NvimuxTermPaste'}},
     [',']      = { t    = {'', nvimux.term.prompt.rename}},
@@ -106,9 +106,12 @@ end
 fns.bind_fn = function(options)
     local prefix = options.prefix  or ''
     local mode = options.mode
-  return function(key, command)
-      local suffix = string.sub(command, 1, 1) == ':' and '<CR>' or ''
-      nvim.nvim_command(mode .. 'noremap <silent> ' .. vars.prefix .. key .. ' ' .. prefix .. command .. suffix)
+    return function(cfg)
+      local suffix = cfg.suffix
+      if suffix == nil then
+        suffix = string.sub(cfg.mapping, 1, 1) == ':' and '<CR>' or ''
+      end
+      nvim.nvim_command(mode .. 'noremap <silent> ' .. vars.prefix .. cfg.key .. ' ' .. prefix .. cfg.mapping .. suffix)
   end
 end
 
@@ -119,9 +122,9 @@ fns.bind = {
   v = fns.bind_fn{mode = 'v'}
 }
 
-fns.bind._ = function(key, mapping, modes)
-  for _, mode in ipairs(modes) do
-    fns.bind[mode](key, mapping)
+fns.bind._ = function(options)
+  for _, mode in ipairs(options.modes) do
+    fns.bind[mode](options)
   end
 end
 -- ]]
@@ -262,9 +265,9 @@ end
 nvimux.bindings.bind = function(options)
   local override = 'nvimux_override_' .. options.key
   if fns.exists(override) then
-    options.value = nvim.nvim_get_var(override)
+    options.mapping = nvim.nvim_get_var(override)
   end
-  fns.bind._(options.key, options.value, options.modes)
+  fns.bind._(options)
 end
 
 nvimux.bindings.bind_all = function(options)
@@ -326,18 +329,16 @@ nvimux.bootstrap = function()
     end
 
     for key, cmd in pairs(bindings.mappings) do
-      for modes, data in pairs(cmd) do
+      for modes, binds in pairs(cmd) do
         modes = fns.split(modes)
-        local arg, action = unpack(data)
-        local binds = {
-          ['key'] = key,
-          ['modes'] = modes,
-        }
-        if type(arg) == 'function' or action ~= nil then
-          bindings.map_table[key] = {['arg'] = arg, ['action'] = action}
-          binds.value = ':lua require("nvimux").mapped{key = "' .. key .. '"}'
+        local arg = table.remove(binds, 1)
+        binds.key = key
+        binds.modes = modes
+        if type(arg) == 'function' then
+          bindings.map_table[key] = {['arg'] = arg, ['action'] = nil}
+          binds.mapping = ':lua require("nvimux").mapped{key = "' .. key .. '"}'
         else
-          binds.value = arg
+          binds.mapping = arg
         end
         nvimux.bindings.bind(binds)
       end
