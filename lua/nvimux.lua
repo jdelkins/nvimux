@@ -94,11 +94,10 @@ setmetatable(vars, nvim_proxy)
 -- [ Private functions
 -- [[ Commands definition
 fns.build_cmd = function(options)
-  nargs = options.nargs or 0
-  cmd = options.cmd or options.lazy_cmd()
-  name = options.name
+  local nargs = options.nargs or 0
+  local cmd = options.cmd or options.lazy_cmd()
 
-  nvim.nvim_command('command! -nargs=' .. nargs .. ' ' .. name .. ' ' .. cmd)
+  nvim.nvim_command('command! -nargs=' .. nargs .. ' ' .. options.name .. ' ' .. cmd)
 end
 
 -- ]]
