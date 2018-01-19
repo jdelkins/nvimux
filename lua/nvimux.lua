@@ -109,9 +109,9 @@ fns.bind_fn = function(options)
     return function(cfg)
       local suffix = cfg.suffix
       if suffix == nil then
-        suffix = string.sub(cfg.command, 1, 1) == ':' and '<CR>' or ''
+        suffix = string.sub(cfg.mapping, 1, 1) == ':' and '<CR>' or ''
       end
-      nvim.nvim_command(mode .. 'noremap <silent> ' .. vars.prefix .. cfg.key .. ' ' .. prefix .. cfg.command .. suffix)
+      nvim.nvim_command(mode .. 'noremap <silent> ' .. vars.prefix .. cfg.key .. ' ' .. prefix .. cfg.mapping .. suffix)
   end
 end
 
