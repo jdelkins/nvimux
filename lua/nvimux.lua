@@ -234,7 +234,7 @@ end
 
 nvimux.term.toggle = function()
   -- TODO Allow external commands
-  local buf_nr = fns.variables.get{mode=vars.quickterm_scope, name='nvimux_last_buffer_id'}
+  local buf_nr = math.floor(fns.variables.get{mode=vars.quickterm_scope, name='nvimux_last_buffer_id'})
   if not buf_nr then
     nvimux.term.new_toggle()
   else
