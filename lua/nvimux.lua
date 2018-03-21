@@ -234,17 +234,20 @@ end
 
 nvimux.term.toggle = function()
   -- TODO Allow external commands
-  local buf_nr = math.floor(fns.variables.get{mode=vars.quickterm_scope, name='nvimux_last_buffer_id'})
+  local buf_nr = fns.variables.get{mode=vars.quickterm_scope, name='nvimux_last_buffer_id'}
+
   if not buf_nr then
     nvimux.term.new_toggle()
   else
-    local window = nvim.nvim_call_function('bufwinnr', {buf_nr})
+    local id = math.floor(buf_nr)
+    local window = nvim.nvim_call_function('bufwinnr', {id})
+
     if window == -1 then
-      if nvim.nvim_call_function('bufname', {buf_nr}) == '' then
+      if nvim.nvim_call_function('bufname', {id}) == '' then
         nvimux.term.new_toggle()
       else
-        local split_type = nvim.nvim_buf_get_var(buf_nr, 'nvimux_buf_orientation')
-        nvim.nvim_command(split_type .. ' | b' .. buf_nr)
+        local split_type = nvim.nvim_buf_get_var(id, 'nvimux_buf_orientation')
+        nvim.nvim_command(split_type .. ' | b' .. id)
       end
     else
       nvim.nvim_command(window .. ' wincmd w | q | stopinsert')
