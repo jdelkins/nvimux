@@ -82,7 +82,7 @@ local bindings = {
 local nvimux_commands = {
   {name = 'NvimuxHorizontalSplit', lazy_cmd = function() return [[spl|wincmd j|]] .. vars.new_window end},
   {name = 'NvimuxVerticalSplit', lazy_cmd = function() return [[vspl|wincmd l|]] .. vars.new_window end},
-  {name = 'NvimuxNewTab', lazy_cmd = function() return [[tabe|]] .. vars.new_tab or vars.new_window end},
+  {name = 'NvimuxNewTab', lazy_cmd = function() return [[tabe|]] .. (vars.new_tab or vars.new_window) end},
   {name = 'NvimuxSet', cmd = [[lua require('nvimux').config.set_fargs(<f-args>)]], nargs='+'},
 }
 
