@@ -40,7 +40,7 @@ local vars = {
   quickterm_direction = 'botright',
   quickterm_orientation = 'vertical',
   quickterm_size = '',
-  new_term = 'term',
+  quickterm_command = 'term',
   close_term = ':x',
   new_window = 'enew',
   new_tab = nil
@@ -226,7 +226,7 @@ end
 -- [[ Quickterm
 nvimux.term.new_toggle = function()
   local split_type = vars:split_type()
-  nvim.nvim_command(split_type .. ' | enew | ' .. vars.new_term)
+  nvim.nvim_command(split_type .. ' | enew | ' .. vars.quickterm_command)
   local buf_nr = nvim.nvim_call_function('bufnr', {'%'})
   nvim.nvim_set_option('wfw', true)
   fns.variables.set{mode='b', nr=buf_nr, name='nvimux_buf_orientation', value=split_type}

@@ -29,8 +29,7 @@ nvimux.config.set_all{
   new_window_buffer = 'single',
   quickterm_direction = 'botright',
   quickterm_orientation = 'vertical',
-  -- Use 'g' for global quickterm
-  quickterm_scope = 't',
+  quickterm_scope = 't', -- Use 'g' for global quickterm
   quickterm_size = '80',
 }
 
