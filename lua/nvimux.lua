@@ -40,9 +40,10 @@ local vars = {
   quickterm_direction = 'botright',
   quickterm_orientation = 'vertical',
   quickterm_size = '',
-  new_term = 'term',
+  quickterm_command = 'term',
   close_term = ':x',
-  new_window = 'enew'
+  new_window = 'enew',
+  new_tab = nil
 }
 
 vars.split_type = function(t)
@@ -81,7 +82,7 @@ local bindings = {
 local nvimux_commands = {
   {name = 'NvimuxHorizontalSplit', lazy_cmd = function() return [[spl|wincmd j|]] .. vars.new_window end},
   {name = 'NvimuxVerticalSplit', lazy_cmd = function() return [[vspl|wincmd l|]] .. vars.new_window end},
-  {name = 'NvimuxNewTab', lazy_cmd = function() return [[tabe|]] .. vars.new_window end},
+  {name = 'NvimuxNewTab', lazy_cmd = function() return [[tabe|]] .. vars.new_tab or vars.new_window end},
   {name = 'NvimuxSet', cmd = [[lua require('nvimux').config.set_fargs(<f-args>)]], nargs='+'},
 }
 
@@ -225,7 +226,7 @@ end
 -- [[ Quickterm
 nvimux.term.new_toggle = function()
   local split_type = vars:split_type()
-  nvim.nvim_command(split_type .. ' | enew | ' .. vars.new_term)
+  nvim.nvim_command(split_type .. ' | enew | ' .. vars.quickterm_command)
   local buf_nr = nvim.nvim_call_function('bufnr', {'%'})
   nvim.nvim_set_option('wfw', true)
   fns.variables.set{mode='b', nr=buf_nr, name='nvimux_buf_orientation', value=split_type}
