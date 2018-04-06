@@ -24,7 +24,8 @@ local nvimux = require('nvimux')
 -- Nvimux configuration
 nvimux.config.set_all{
   prefix = '<C-a>',
-  open_term_by_default = true,
+  new_window = 'enew', -- Use 'term' if you want to open a new term for every new window
+  new_tab = nil, -- Defaults to new_window. Set to 'term' if you want a new term for every new tab
   new_window_buffer = 'single',
   quickterm_direction = 'botright',
   quickterm_orientation = 'vertical',
