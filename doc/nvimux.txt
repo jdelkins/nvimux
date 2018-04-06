@@ -101,13 +101,6 @@ g:nvimux_no_neoterm                  *nvimux_no_neoterm* *g:nvimux_no_neoterm*
 g:nvimux_quickterm_provider                      *g:nvimux_quickterm_provider*
                   Specifies the function that creates a quickterm.
 
-g:nvimux_quickterm_scope                            *g:nvimux_quickterm_scope*
-                  Specifies the scope available for the quickterm.
-                  If set to global scope, the quickterm will be shared across
-                  tabs. If tab-local, each tab will have its own quickterm.
-                  Defaults to >
-                    let g:nvimux_quickterm_scope = 'g'
-
 g:nvimux_quickterm_direction                    *g:nvimux_quickterm_direction*
                   Specifies the direction to open the scratchpad terminal.
                   Relative to default quickterm logic.
@@ -163,7 +156,9 @@ g:nvimux_horizontal_split                          *g:nvimux_horizontal_split*
                     let g:nvimux_horizontal_split = ':NvimuxHorizontalSplit<CR>'
 
 g:nvimux_quickterm_scope                            *g:nvimux_quickterm_scope*
-                  Allows to set quickterm to be global or tab-local.
+                  Specifies the scope available for the quickterm.
+                  If set to global scope, the quickterm will be shared across
+                  tabs. If tab-local, each tab will have its own quickterm.
                   Defaults to >
                     let g:nvimux_quickterm_scope = 'g'
 
