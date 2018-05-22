@@ -5,7 +5,7 @@ Nvimux allows neovim to work as a tmux replacement.
 It does so by mapping tmuxs keybindings to neovim, using its windows, buffers and terminals.
 
 ### Support nvimux
-Support nvimux development by sending me some bitcoins at `137gRFaXxJmyV23FA9PZZ6Fp8Pvs11gPPV`.
+Support nvimux development by sending me some bitcoins at `1P4iGMqrBcjdgicC1EdQFA4qF91LtRri1Y`.
 
 ## Configuring
 
