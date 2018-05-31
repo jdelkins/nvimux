@@ -5,6 +5,7 @@ nvimux.bindings = {}
 nvimux.term = {}
 nvimux.term.prompt = {}
 
+
 --[[
 Nvimux: Neovim as a terminal multiplexer.
 
@@ -293,9 +294,12 @@ end
 
 nvimux.debug.bindings = function()
   for k, v in pairs(bindings.mappings) do
-    print(k, v)
+    print(k, v[1], v[2][1])
   end
-  print('')
+end
+
+
+nvimux.debug.map_table = function()
   for k, v in pairs(bindings.map_table) do
     print(k, v)
   end
