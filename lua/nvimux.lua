@@ -222,7 +222,8 @@ end
  -- ]]
 -- ]
 
-nvimux.bootstrap = function()
+nvimux.bootstrap = function(force)
+  if force or nvimux.loaded == nil then
     for i=1, 9 do
       bindings.mappings[i] = bindings.create_binding({"n", "v", "i", "t"} , i .. 'gt')
     end
@@ -246,7 +247,9 @@ nvimux.bootstrap = function()
         bindings.bind(binds)
       end
     end
-    fns.build_cmd{name = 'NvimuxReload', cmd = 'lua require("nvimux").bootstrap()'}
+    fns.build_cmd{name = 'NvimuxReload', cmd = 'lua require("nvimux").bootstrap(true)'}
+    nvimux.loaded = true
+  end
 end
 -- ]
 
