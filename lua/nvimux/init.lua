@@ -5,12 +5,13 @@ This is the lua reimplementation of VimL.
 --]]
 -- luacheck: globals unpack
 
+local state = {}
 local nvimux = {}
-local bindings = require('bindings')
-local vars = require('vars')
-local fns = require('fns')
+local bindings = require('nvimux.bindings')
+local vars = require('nvimux.vars')
+local fns = require('nvimux.fns')
 nvimux.debug = {}
-nvimux.bindings = bindings -- HACK.
+nvimux.bindings = bindings
 nvimux.config = {}
 nvimux.term = {}
 nvimux.term.prompt = {}
@@ -32,8 +33,9 @@ local nvim_proxy = {
 bindings.mappings = {
   ['<C-r>']  = { nvi  = {':so $MYVIMRC'}},
   ['!']      = { nvit = {':wincmd T'}},
-  ['%']      = { nvit = {function() return vars.vertical_split end} },
-  ['"']      = { nvit = {function() return vars.horizontal_split end}},
+  ['%']      = { nvit = {function() return vars.vertical_split end}},
+  ['\"']     = { nvit = {function() return vars.horizontal_split end}},
+  ['-']      = { nvit = {':NvimuxPreviousTab'}},
   ['q']      = { nvit = {':NvimuxToggleTerm'}},
   ['w']      = { nvit = {':tabs'}},
   ['o']      = { nvit = {'<C-w>w'}},
@@ -51,7 +53,6 @@ bindings.mappings = {
   [']']      = { t    = {':NvimuxTermPaste'}},
   [',']      = { t    = {'', nvimux.term.prompt.rename}},
   ['c']      = { nvit = {':NvimuxNewTab'}},
-  ['t']      = { nvit = {':echom "Deprecated mapping. set `new_window` or remap this." \\| silent tabe'}},
 }
 
 bindings.map_table = {}
@@ -59,8 +60,13 @@ bindings.map_table = {}
 local nvimux_commands = {
   {name = 'NvimuxHorizontalSplit', lazy_cmd = function() return [[spl|wincmd j|]] .. vars.new_window end},
   {name = 'NvimuxVerticalSplit', lazy_cmd = function() return [[vspl|wincmd l|]] .. vars.new_window end},
+  {name = 'NvimuxPreviousTab', cmd = [[lua require('nvimux').go_to_last_tab()]]},
   {name = 'NvimuxNewTab', lazy_cmd = function() return [[tabe|]] .. (vars.new_tab or vars.new_window) end},
   {name = 'NvimuxSet', cmd = [[lua require('nvimux').config.set_fargs(<f-args>)]], nargs='+'},
+}
+
+local autocmds = {
+  {event = "TabLeave", target="*", cmd = [[lua require('nvimux').set_last_tab()]]},
 }
 
 -- ]]
@@ -114,6 +120,15 @@ end
 
 -- ]]
 -- ]
+
+nvimux.do_autocmd = function()
+  local au = {"augroup nvimux"}
+  for _, v in ipairs(autocmds) do
+    table.insert(au, "au! " .. v.event .. " " .. v.target .. " " .. v.cmd)
+  end
+  table.insert(au, "augroup END")
+  nvim.nvim_call_function("execute", {au})
+end
 
 -- [ Public API
 -- [[ Config-handling commands
@@ -203,6 +218,10 @@ nvimux.debug.map_table = function()
   end
 end
 
+nvimux.debug.state = function()
+  print(require("inspect")(state))
+end
+
 nvimux.term_only = function(options)
   local action = options.action or nvim.nvim_command
   if nvim.nvim_buf_get_option('%', 'buftype') == 'terminal' then
@@ -219,8 +238,22 @@ nvimux.mapped = function(options)
     nvim.nvim_command(ret)
   end
 end
+
+nvimux.set_last_tab = function(tabn)
+  if tabn == nil then
+    tabn = nvim.nvim_call_function('tabpagenr', {})
+  end
+
+  state.last_tab = tabn
+end
+
+nvimux.go_to_last_tab = function()
+  nvim.nvim_command((state.last_tab or 1)  .. 'tabn')
+end
+
  -- ]]
 -- ]
+
 
 nvimux.bootstrap = function(force)
   if force or nvimux.loaded == nil then
@@ -240,7 +273,7 @@ nvimux.bootstrap = function(force)
         binds.modes = modes
         if type(arg) == 'function' then
           bindings.map_table[key] = {['arg'] = arg, ['action'] = nil}
-          binds.mapping = ':lua require("nvimux").mapped{key = "' .. key .. '"}'
+          binds.mapping = ":lua require('nvimux').mapped{key = '" .. key .. "'}"
         else
           binds.mapping = arg
         end
@@ -248,6 +281,7 @@ nvimux.bootstrap = function(force)
       end
     end
     fns.build_cmd{name = 'NvimuxReload', cmd = 'lua require("nvimux").bootstrap(true)'}
+    nvimux.do_autocmd()
     nvimux.loaded = true
   end
 end
