@@ -1,5 +1,6 @@
 local fns = {}
 local nvim = vim.api -- luacheck: ignore
+
 fns.exists = function(var)
   return nvim.nvim_call_function('exists', {var}) == 1
 end

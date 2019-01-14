@@ -1,6 +1,6 @@
 local bindings = {}
-local vars = require('vars')
-local fns = require('fns')
+local vars = require('nvimux.vars')
+local fns = {}
 local nvim = vim.api -- luacheck: ignore
 
 local consts = {
@@ -33,16 +33,6 @@ fns.bind_all_modes = function(options)
   end
 end
 
--- DEPRECATED.
-fns.override = function(key, mapping)
-  local override = 'nvimux_override_' .. options.key
-  if fns.exists(override) then
-    return nvim.nvim_get_var(override)
-  else
-    return mapping
-  end
-end
-
 bindings.bind = function(options)
   fns.bind_all_modes(options)
 end
@@ -54,13 +44,11 @@ bindings.create_binding = function(modes, command)
 
 end
 
-
 bindings.bind_all = function(options)
   for _, bind in ipairs(options) do
     local key, cmd, modes = unpack(bind)
     bindings.mappings[key] = bindings.create_binding(modes, cmd)
   end
 end
-
 
 return bindings
