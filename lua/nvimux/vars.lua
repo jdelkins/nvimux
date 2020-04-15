@@ -1,5 +1,11 @@
 local vars = {
   prefix = '<C-b>',
+  local_prefix = {
+    n = nil,
+    v = nil,
+    i = nil,
+    t = nil
+  },
   vertical_split = ':NvimuxVerticalSplit',
   horizontal_split = ':NvimuxHorizontalSplit',
   quickterm_scope = 'g',

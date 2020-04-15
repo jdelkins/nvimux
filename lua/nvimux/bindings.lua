@@ -9,20 +9,21 @@ local consts = {
 }
 
 fns.nvim_do_bind = function(options)
-    local prefix = options.prefix  or ''
+    local escape_prefix = options.escape_prefix  or ''
     local mode = options.mode
     return function(cfg)
       local suffix = cfg.suffix
+      local prefix = vars.local_prefix[mode] or vars.prefix
       if suffix == nil then
         suffix = string.sub(cfg.mapping, 1, 1) == ':' and '<CR>' or ''
       end
-      nvim.nvim_command(mode .. 'noremap <silent> ' .. vars.prefix .. cfg.key .. ' ' .. prefix .. cfg.mapping .. suffix)
+      nvim.nvim_command(mode .. 'noremap <silent> ' .. prefix .. cfg.key .. ' ' .. escape_prefix .. cfg.mapping .. suffix)
   end
 end
 
 fns.bind = {
-  t = fns.nvim_do_bind{mode = 't', prefix = consts.terminal_quit},
-  i = fns.nvim_do_bind{mode = 'i', prefix = consts.esc},
+  t = fns.nvim_do_bind{mode = 't', escape_prefix = consts.terminal_quit},
+  i = fns.nvim_do_bind{mode = 'i', escape_prefix = consts.esc},
   n = fns.nvim_do_bind{mode = 'n'},
   v = fns.nvim_do_bind{mode = 'v'}
 }
