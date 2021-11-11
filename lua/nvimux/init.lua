@@ -245,7 +245,7 @@ end
 
 nvimux.debug.map_table = function()
   for k, v in pairs(bindings.map_table) do
-    print(k, v)
+  print(vim.inspect{k, v})
   end
 end
 
@@ -264,8 +264,8 @@ end
 
 nvimux.mapped = function(options)
   local mapping = bindings.map_table[options.key]
-  local ret = mapping.arg()
-  if ret ~= '' then
+  local ret = tap(mapping.arg())
+  if ret ~= '' and ret ~= nil then
     nvim.nvim_command(ret)
   end
 end
