@@ -113,6 +113,50 @@ local autocmds = {
   {event = "TabLeave", target="*", cmd = [[lua require('nvimux').set_last_tab()]]},
 }
 
+local mappings = {
+  -- Reload global configs
+  {{'n', 'v', 'i'},      '<C-r>', ':so $MYVIMRC'},
+
+  -- Window management
+  {{'n', 'v', 'i', 't'}, '!',  ':wincmd T'},
+  {{'n', 'v', 'i', 't'}, '%',  nvimux.commands.vertical_split},
+  {{'n', 'v', 'i', 't'}, '\"', nvimux.commands.horizontal_split},
+  {{'n', 'v', 'i', 't'}, '-',  nvimux.go_to_last_tab},
+  {{'n', 'v', 'i', 't'}, 'q',  nvimux.term.toggle },
+  {{'n', 'v', 'i', 't'}, 'w',  ':tabs'},
+  {{'n', 'v', 'i', 't'}, 'o',  '<C-w>w'},
+  {{'n', 'v', 'i', 't'}, 'n',  'gt'},
+  {{'n', 'v', 'i', 't'}, 'p',  'gT'},
+  {{'n', 'v', 'i'},      'x',  ':bd %'},
+  {{'t'},                'x',  function() vim.api.nvim_buf_delete(0, {force = true}) end},
+  {{'n', 'v', 'i'},      'X',  ':enew \\| bd #'},
+
+  -- Moving around
+  {{'n', 'v', 'i', 't'}, 'h',  '<C-w><C-h>'},
+  {{'n', 'v', 'i', 't'}, 'j',  '<C-w><C-j>'},
+  {{'n', 'v', 'i', 't'}, 'k',  '<C-w><C-k>'},
+  {{'n', 'v', 'i', 't'}, 'l',  '<C-w><C-l>'},
+
+  -- Term facilities
+  {{'t'},                ':',  ':', suffix = ''},
+  {{'t'},                '[',  ''},
+  {{'t'},                ']',  function() nvimux.term_only{cmd = 'normal pa'} end},
+  {{'t'},                ',',  nvimux.term.prompt.rename},
+
+  -- Tab management
+  {{'n', 'v', 'i', 't'}, 'c',  nvimux.commands.new_tab},
+  {{'n', 'v', 'i', 't'}, '0',  '0gt'},
+  {{'n', 'v', 'i', 't'}, '1',  '1gt'},
+  {{'n', 'v', 'i', 't'}, '2',  '2gt'},
+  {{'n', 'v', 'i', 't'}, '3',  '3gt'},
+  {{'n', 'v', 'i', 't'}, '4',  '4gt'},
+  {{'n', 'v', 'i', 't'}, '5',  '5gt'},
+  {{'n', 'v', 'i', 't'}, '6',  '6gt'},
+  {{'n', 'v', 'i', 't'}, '7',  '7gt'},
+  {{'n', 'v', 'i', 't'}, '8',  '8gt'},
+  {{'n', 'v', 'i', 't'}, '9',  '9gt'},
+}
+
 -- ]]
 
 setmetatable(vars, nvim_proxy)
@@ -165,9 +209,9 @@ end
 -- ]]
 -- ]
 
-nvimux.do_autocmd = function()
+nvimux.do_autocmd = function(commands)
   local au = {"augroup nvimux"}
-  for _, v in ipairs(autocmds) do
+  for _, v in ipairs(commands) do
     table.insert(au, "au! " .. v.event .. " " .. v.target .. " " .. v.cmd)
   end
   table.insert(au, "augroup END")
@@ -327,11 +371,43 @@ nvimux.bootstrap = function(force)
       end
     end
     fns.build_cmd{name = 'NvimuxReload', cmd = 'lua require("nvimux").bootstrap(true)'}
-    nvimux.do_autocmd()
+    nvimux.do_autocmd(autocmds)
     nvimux.loaded = true
   end
 end
 -- ]
 
+--[[
+nvimux.setup{
+  config = {
+    prefix = '<c-a>'
+  },
+  bindings = {
+    {{'n'}, '<space>', function() print("hello!") end},
+  }
+}
+--]]
+nvimux.setup = function(opts)
+  if (vim.keymap == nil) then
+    print("Aborting setup of nvimux. vim.keymap not found")
+    return
+  end
+  -- TODO Remove global vars, make it local to context only
+  vars = vim.tbl_deep_extend("force", vars or {}, opts.config or {})
+
+  local context = vars
+  context.bindings = vim.tbl_deep_extend("force", mappings, opts.bindings or {})
+
+  for _, binding in ipairs(context.bindings) do
+    bindings.keymap(binding, context)
+  end
+
+  context.autocmds = vim.tbl_deep_extend("force", autocmds, opts.autocmds or {})
+  nvimux.do_autocmd(context.autocmds)
+
+  context.state = {}
+
+  nvimux.context = context
+end
 
 return nvimux
