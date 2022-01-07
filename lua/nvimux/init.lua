@@ -86,23 +86,22 @@ end
 
 -- Deprecated
 local tab_cmd = function(create_window)
-      local select_buffer
-      local selector = vars.new_tab or vars.new_window
-    if type(selector) == "function" then
-      select_buffer = selector
-    else
-      select_buffer = function()
-        vim.api.nvim_command(selector)
-      end
+  local select_buffer
+  local selector = nvimux.context.new_tab or nvimux.context.new_window
+  if type(selector) == "function" then
+    select_buffer = selector
+  else
+    select_buffer = function()
+      vim.api.nvim_command(selector)
     end
+  end
 
-    ui.on_new(create_window, select_buffer)
+  ui.on_new(create_window, select_buffer)
 end
 
 nvimux.commands.horizontal_split = function() return win_cmd[[spl|wincmd j]] end
 nvimux.commands.vertical_split = function() return win_cmd[[vspl|wincmd l]] end
 nvimux.commands.new_tab = function() return tab_cmd[[tabe]] end
-
 
 -- Deprecated
 local nvimux_commands = {
