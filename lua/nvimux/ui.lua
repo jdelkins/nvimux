@@ -1,4 +1,4 @@
-local vars = require("nvimux.vars").proto
+local vars = require("nvimux.vars")
 local ui = {}
 
 ui.new_buf = function()
