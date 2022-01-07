@@ -5,7 +5,7 @@ vars.local_prefix = {
     v = nil,
     i = nil,
     t = nil
-  },
+  }
 
 vars.quickterm = {
   scope = 'g',
