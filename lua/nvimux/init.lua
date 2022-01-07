@@ -5,7 +5,6 @@ This is the lua reimplementation of VimL.
 --]]
 -- luacheck: globals unpack
 
-local state = {}
 local __dep_warn = true
 local deprecated = function(msg)
   if __dep_warn then
@@ -242,7 +241,8 @@ end
 nvimux.debug.vars = function()
   for k, v in pairs(vars) do
     print(k, v)
-  end
+nvimux.debug.context = function()
+  print(vim.inspect(nvimux.context))
 end
 
 nvimux.debug.bindings = function()
@@ -289,11 +289,11 @@ nvimux.set_last_tab = function(tabn)
     tabn = nvim.nvim_call_function('tabpagenr', {})
   end
 
-  state.last_tab = tabn
+  nvimux.context.state.last_tab = tabn
 end
 
 nvimux.go_to_last_tab = function()
-  nvim.nvim_command((state.last_tab or 1)  .. 'tabn')
+  nvim.nvim_command((nvimux.context.state.last_tab or 1)  .. 'tabn')
 end
 
  -- ]]
