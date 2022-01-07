@@ -194,18 +194,20 @@ end
 -- ]]
 
 -- [[ Quickterm
+-- TODO port
 nvimux.term.new_toggle = function()
-  local split_type = vars:split_type()
-  nvim.nvim_command(split_type .. ' | enew | ' .. vars.quickterm_command)
+  local split_type = nvimux.context.quickterm:split_type()
+  nvim.nvim_command(split_type .. ' | enew | ' .. nvimux.context.quickterm.command)
   local buf_nr = nvim.nvim_call_function('bufnr', {'%'})
   nvim.nvim_set_option('wfw', true)
-  fns.variables.set{mode='b', nr=buf_nr, name='nvimux_buf_orientation', value=split_type}
-  fns.variables.set{mode=vars.quickterm_scope, name='nvimux_last_buffer_id', value=buf_nr}
+  vim.b[buf_nr].nvimux_buf_orientation = split_type
+  vim[nvimux.context.quickterm.scope].nvimux_last_buffer_id = buf_nr
 end
 
+-- TODO port
 nvimux.term.toggle = function()
   -- TODO Allow external commands
-  local buf_nr = fns.variables.get{mode=vars.quickterm_scope, name='nvimux_last_buffer_id'}
+  local buf_nr = vim.g.nvimux_last_buffer_id
 
   if not buf_nr then
     nvimux.term.new_toggle()
@@ -217,7 +219,7 @@ nvimux.term.toggle = function()
       if nvim.nvim_call_function('bufname', {id}) == '' then
         nvimux.term.new_toggle()
       else
-        local split_type = nvim.nvim_buf_get_var(id, 'nvimux_buf_orientation')
+        local split_type = vim.b[buf_nr].nvimux_buf_orientation
         nvim.nvim_command(split_type .. ' | b' .. id)
       end
     else
@@ -229,7 +231,7 @@ end
 nvimux.term.prompt.rename = function()
   nvimux.term_only{
     cmd = fns.prompt('nvimux > New term name: '),
-    action = function(k) nvim.nvim_command('file term://' .. k) end
+    action = function(k) vim.api.nvim_command('file term://' .. k) end
   }
 end
 -- ]]
@@ -238,47 +240,31 @@ end
 -- ]]
 
 -- [[ Top-level commands
-nvimux.debug.vars = function()
-  for k, v in pairs(vars) do
-    print(k, v)
 nvimux.debug.context = function()
   print(vim.inspect(nvimux.context))
 end
 
 nvimux.debug.bindings = function()
-  local has, inspect = pcall(require, "inspect")
-  for k, v in pairs(bindings.mappings) do
-    if has then
-      print(k, inspect(v))
-    else
-      -- TODO better fallback debug
-      print(k, v)
-    end
-  end
-end
-
-
-nvimux.debug.map_table = function()
-  for k, v in pairs(bindings.map_table) do
-  print(vim.inspect{k, v})
-  end
+  print(vim.inspect(nvimux.context.bindings))
 end
 
 nvimux.debug.state = function()
-  print(require("inspect")(state))
+  print(vim.inspect(nvimux.context.state))
 end
 
 nvimux.term_only = function(options)
-  local action = options.action or nvim.nvim_command
-  if nvim.nvim_buf_get_option('%', 'buftype') == 'terminal' then
+  local action = options.action or vim.api.nvim_command
+  if vim.bo.buftype == 'terminal' then
     action(options.cmd)
   else
     print("Not on terminal")
   end
 end
 
+-- deprecated
 nvimux.mapped = function(options)
   local mapping = bindings.map_table[options.key]
+  local ret = mapping.arg()
   if ret ~= '' and ret ~= nil then
     nvim.nvim_command(ret)
   end
