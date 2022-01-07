@@ -6,33 +6,43 @@ This is the lua reimplementation of VimL.
 -- luacheck: globals unpack
 
 local state = {}
+local __dep_warn = true
+local deprecated = function(msg)
+  if __dep_warn then
+    print(msg)
+    __dep_warn = false
+  end
+end
+
 local nvimux = {}
 local bindings = require('nvimux.bindings')
 local vars = require('nvimux.vars')
 local fns = require('nvimux.fns')
 local ui = require('nvimux.ui')
+
 nvimux.debug = {}
 nvimux.bindings = bindings
 nvimux.config = {}
 nvimux.term = {}
 nvimux.term.prompt = {}
-
 nvimux.commands = {}
 
 -- [ Private variables and tables
 local nvim = vim.api -- luacheck: ignore
 local nvim_proxy = {
   __index = function(_, key)
+    deprecated("Don't use the proxy to vim vars. It will be removed in the next version")
     local key_ = 'nvimux_' .. key
     local val = nil
     if fns.exists(key_) then
-      val = nvim.nvim_get_var(key_)
+      val = vim.api.nvim_get_var(key_)
     end
     return val
   end
 }
 
 -- [[ Table of default bindings
+-- Deprecated
 bindings.mappings = {
   ['<C-r>']  = { nvi  = {':so $MYVIMRC'}},
   ['!']      = { nvit = {':wincmd T'}},
@@ -60,6 +70,7 @@ bindings.mappings = {
 
 bindings.map_table = {}
 
+-- Deprecated
 local win_cmd = function(create_window)
       local select_buffer
     if type(vars.new_window) == "function" then
@@ -73,6 +84,7 @@ local win_cmd = function(create_window)
     ui.on_new(create_window, select_buffer)
 end
 
+-- Deprecated
 local tab_cmd = function(create_window)
       local select_buffer
       local selector = vars.new_tab or vars.new_window
@@ -92,6 +104,7 @@ nvimux.commands.vertical_split = function() return win_cmd[[vspl|wincmd l]] end
 nvimux.commands.new_tab = function() return tab_cmd[[tabe]] end
 
 
+-- Deprecated
 local nvimux_commands = {
   {name = 'NvimuxPreviousTab', cmd = [[lua require('nvimux').go_to_last_tab()]]},
   {name = 'NvimuxSet', cmd = [[lua require('nvimux').config.set_fargs(<f-args>)]], nargs='+'},
@@ -287,6 +300,7 @@ end
 
 
 nvimux.bootstrap = function(force)
+  deprecated("nvimux.bootstrap is deprecated. Use nvimux.setup")
   if force or nvimux.loaded == nil then
     for i=1, 9 do
       bindings.mappings[i] = bindings.create_binding({"n", "v", "i", "t"} , i .. 'gt')
