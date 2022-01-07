@@ -177,14 +177,17 @@ end
 -- [ Public API
 -- [[ Config-handling commands
 nvimux.config.set = function(options)
+  deprecated("nvimux.config.set is deprecated. Use nvimux.setup")
   vars[options.key] = options.value
 end
 
 nvimux.config.set_fargs = function(key, value)
+  deprecated("nvimux.config.set_fargs is deprecated. Use nvimux.setup")
   nvimux.config.set{key=key, value=value}
 end
 
 nvimux.config.set_all = function(options)
+  deprecated("nvimux.config.set_all is deprecated. Use nvimux.setup")
   for key, value in pairs(options) do
     nvimux.config.set{['key'] = key, ['value'] = value}
   end
