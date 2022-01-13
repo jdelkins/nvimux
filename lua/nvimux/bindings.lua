@@ -1,7 +1,6 @@
 local bindings = {}
 local vars = require('nvimux.vars')
 local fns = {}
-local nvim = vim.api -- luacheck: ignore
 
 local consts = {
   terminal_quit = '<C-\\><C-n>',
@@ -17,7 +16,7 @@ fns.nvim_do_bind = function(options)
       if suffix == nil then
         suffix = string.sub(cfg.mapping, 1, 1) == ':' and '<CR>' or ''
       end
-      nvim.nvim_command(mode .. 'noremap <silent> ' .. prefix .. cfg.key .. ' ' .. escape_prefix .. cfg.mapping .. suffix)
+      vim.cmd(mode .. 'noremap <silent> ' .. prefix .. cfg.key .. ' ' .. escape_prefix .. cfg.mapping .. suffix)
   end
 end
 

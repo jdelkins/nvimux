@@ -27,13 +27,12 @@ nvimux.term.prompt = {}
 nvimux.commands = {}
 
 -- [ Private variables and tables
-local nvim = vim.api -- luacheck: ignore
 local nvim_proxy = {
   __index = function(_, key)
     deprecated("Don't use the proxy to vim vars. It will be removed in the next version")
     local key_ = 'nvimux_' .. key
     local val = nil
-    if fns.exists(key_) then
+    if vim.fn.exists(key_) == 1 then
       val = vim.api.nvim_get_var(key_)
     end
     return val
@@ -170,7 +169,7 @@ nvimux.do_autocmd = function(commands)
     table.insert(au, "au! " .. v.event .. " " .. v.target .. " " .. v.cmd)
   end
   table.insert(au, "augroup END")
-  nvim.nvim_call_function("execute", {au})
+  vim.fn.execute(au)
 end
 
 -- [ Public API
@@ -197,9 +196,9 @@ end
 -- TODO port
 nvimux.term.new_toggle = function()
   local split_type = nvimux.context.quickterm:split_type()
-  nvim.nvim_command(split_type .. ' | enew | ' .. nvimux.context.quickterm.command)
-  local buf_nr = nvim.nvim_call_function('bufnr', {'%'})
-  nvim.nvim_set_option('wfw', true)
+  vim.cmd(split_type .. ' | enew | ' .. nvimux.context.quickterm.command)
+  local buf_nr = vim.fn.bufnr('%')
+  vim.wo.wfw = true
   vim.b[buf_nr].nvimux_buf_orientation = split_type
   vim[nvimux.context.quickterm.scope].nvimux_last_buffer_id = buf_nr
 end
@@ -213,17 +212,17 @@ nvimux.term.toggle = function()
     nvimux.term.new_toggle()
   else
     local id = math.floor(buf_nr)
-    local window = nvim.nvim_call_function('bufwinnr', {id})
+    local window = vim.fn.bufwinnr(id)
 
     if window == -1 then
-      if nvim.nvim_call_function('bufname', {id}) == '' then
+      if vim.fn.bufname(id) == '' then
         nvimux.term.new_toggle()
       else
         local split_type = vim.b[buf_nr].nvimux_buf_orientation
-        nvim.nvim_command(split_type .. ' | b' .. id)
+        vim.cmd(split_type .. ' | b' .. id)
       end
     else
-      nvim.nvim_command(window .. ' wincmd w | q | stopinsert')
+      vim.cmd(window .. ' wincmd w | q | stopinsert')
     end
   end
 end
@@ -266,20 +265,20 @@ nvimux.mapped = function(options)
   local mapping = bindings.map_table[options.key]
   local ret = mapping.arg()
   if ret ~= '' and ret ~= nil then
-    nvim.nvim_command(ret)
+    vim.cmd(ret)
   end
 end
 
 nvimux.set_last_tab = function(tabn)
   if tabn == nil then
-    tabn = nvim.nvim_call_function('tabpagenr', {})
+    tabn = vim.fntabpagenr()
   end
 
   nvimux.context.state.last_tab = tabn
 end
 
 nvimux.go_to_last_tab = function()
-  nvim.nvim_command((nvimux.context.state.last_tab or 1)  .. 'tabn')
+  vim.cmd((nvimux.context.state.last_tab or 1)  .. 'tabn')
 end
 
  -- ]]
