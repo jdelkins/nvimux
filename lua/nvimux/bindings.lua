@@ -60,8 +60,8 @@ else
       bindings.mapping[id] = lhs
       lhs = [[<Cmd>lua require("nvimux.bindings").do_mapping(]] .. id .. [[)<CR>]]
     end
-
     vim.api.nvim_set_keymap(mode, rhs, lhs, options)
+  end
 end
 
 bindings.do_mapping = function(ix)
