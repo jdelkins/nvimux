@@ -1,8 +1,8 @@
---[[
-Nvimux: Neovim as a terminal multiplexer.
-
-This is the lua reimplementation of VimL.
---]]
+--- Neovim as a tmux replacement
+-- nvimux is a wrapper on top of neovim's binding API
+-- that conveniently sets up tmux bindings to neovim.
+-- @author hkupty
+-- @module nvimux
 -- luacheck: globals unpack
 
 local __dep_warn = true
@@ -319,16 +319,15 @@ nvimux.bootstrap = function(force)
 end
 -- ]
 
---[[
-nvimux.setup{
-  config = {
-    prefix = '<c-a>'
-  },
-  bindings = {
-    {{'n'}, '<space>', function() print("hello!") end},
-  }
-}
---]]
+--- Configure nvimux to start with the supplied arguments
+-- It can be configured to use the defaults by only supplying an empty table.
+-- This function must be called to initalize nvimux.
+-- @function nvimux.setup
+-- @tparam opts table of configuration
+-- @tparam opts.config table properties for nvimux
+-- @tparam opts.bindings table Bindings to be configured with nvimux
+-- @tparam opts.autocmds table autocmds that belong to the same logical group than nvimux
+-- @see nvimux.vars for the defaults
 nvimux.setup = function(opts)
   if (vim.keymap == nil) then
     print("Aborting setup of nvimux. vim.keymap not found")
