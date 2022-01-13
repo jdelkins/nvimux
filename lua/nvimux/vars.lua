@@ -1,5 +1,27 @@
 local vars = {}
 
+local _buf = nil
+
+local singleton_buf = function()
+  if _buf == nil or not vim.api.nvim_buf_is_loaded(ui._buf) then
+    local content
+
+    _buf = vim.api.nvim_create_buf(false, true)
+    local tp = type(vars.scratch_buf_content)
+    if (tp == "table") then
+      content = tp
+    elseif (tp == "function") then
+      content = vars.scratch_buf_content()
+    else
+      content = { "" }
+    end
+    vim.api.nvim_buf_set_lines(_buf, 0, -1, false, content)
+  end
+
+  return _buf
+end
+
+
 vars.local_prefix = {
     n = nil,
     v = nil,
@@ -33,11 +55,11 @@ vars.new_buffer = function()
 end
 
 vars.new_window = function()
-    vim.api.nvim_set_current_buf(require("nvimux.ui").singleton_buf())
+    vim.api.nvim_set_current_buf(singleton_buf())
 end
 
 vars.new_tab = function()
-    vim.api.nvim_set_current_buf(require("nvimux.ui").singleton_buf())
+    vim.api.nvim_set_current_buf(singleton_buf())
 end
 
 vars.quickterm.split_type = function(t)
