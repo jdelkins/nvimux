@@ -6,8 +6,7 @@ CONTENTS                                                        *nvimux-help*
   Introduction............................|nvimux-introduction|
   Awesomeness.............................|nvimux-awesomeness|
   Commands................................|nvimux-commands|
-  Functions...............................|nvimux-functions|
-  Customizing.............................|nvimux-customizing|
+  API.....................................|nvimux-api|
   Credits.................................|nvimux-credits|
 
 =============================================================================
@@ -44,6 +43,11 @@ NvimuxVerticalSplit                                     *NvimuxVerticalSplit*
 NvimuxHorizontalSplit                                 *NvimuxHorizontalSplit*
                   Simple alias for quick horizontal window splitting.
 
+NvimuxNewTab                                                   *NvimuxNewTab*
+                  Allows for creating a new tab through nvimux.
+                  Useful if any hooks are configured to run when opening a
+                  new tab.
+
 NvimuxTermPaste                                             *NvimuxTermPaste*
                   Paste contents into terminal.
                   Only available if current buffer is a terminal.
@@ -58,115 +62,29 @@ NvimuxTermRename new-term-name                             *NvimuxTermRename*
 
 
 =============================================================================
-Functions                                                  *nvimux-functions*
+API                                                             *nvimux-ampi*
 
-NvimuxToggleTermFunc()                                 *NvimuxToggleTermFunc*
-                  Toggles a quickterm according to nvimux quickter scope.
-                  This is set via {g:nvimux_quickterm_scope} variable.
-                  Calls function supplied via {g:nvimux_quickterm_provider},
-                  defaulting to a simple call to native terminal.
+nvimux is implemented completely in lua with its commands essentially falling
+back to a lua implementation.
 
-NvimuxRawToggleTerm(backing_var, create_new)            *NvimuxRawToggleTerm*
-                  Allows toggling a terminal buffer, using {backing_var} to
-                  determine the state of such terminal and {create_new} to
-                  create a new terminal instance if {backing_var} is not set
-                  or returns -1.
-                  The {backing_var} variable should hold the buffer id and
-                  the supplied argument is the name of the variable along
-                  with the correct scope on which the toggleable terminal is
-                  available.
+There is one main module where the important functions sit, which is `nvimux`
 
-NvimuxInteractiveTermRename()                   *NvimuxInteractiveTermRename*
-                  Prompts the user for a new name for current terminal.
-                  Calls command {NvimuxTermRename} with supplied new terminal
-                  name.
+
+nvimux.setup({opts})                                           *nvimux.setup*
+  Takes a map of options (possibly empty) and initializes nvimux
+
+  `require("nvimux").setup{
+     config = {
+       prefix = '<c-a>'
+     },
+     bindings = {
+       {{'n'}, '<space>', function() print('hello!') end,}
+     }
+   }`
+
 
 =============================================================================
-Customizing                                              *nvimux-customizing*
-
-Nvimux allows several customizations on how to use it, as depicted below.
-
-
-g:nvimux_prefix                              *nvimux_prefix* *g:nvimux_prefix*
-                  Allows a different shortcut to nvimux commands.
-                  Defaults to >
-                    let g:nvimux_prefix='<C-b>'
-
-g:nvimux_no_neoterm                  *nvimux_no_neoterm* *g:nvimux_no_neoterm*
-                  This has been removed on commit 37cc7b8cdc4. Neoterm is no
-                  longer a dependency and can be integrated using
-                  {nvimux_new_term}, {nvimux_close_term} and
-                  {nvimux_quickterm_provider} variables.
-
-g:nvimux_quickterm_provider                      *g:nvimux_quickterm_provider*
-                  Specifies the function that creates a quickterm.
-
-g:nvimux_quickterm_direction                    *g:nvimux_quickterm_direction*
-                  Specifies the direction to open the scratchpad terminal.
-                  Relative to default quickterm logic.
-                  Defaults to >
-                    let g:nvimux_quickterm_direction = 'botright'
-
-g:nvimux_quickterm_orientation                *g:nvimux_quickterm_orientation*
-                  Specifies the orientation to open the scratchpad terminal.
-                  Relative to default quickterm logic.
-                  Defaults to >
-                    let g:nvimux_quickterm_orientation = 'vertical'
-
-g:nvimux_quickterm_size                              *g:nvimux_quickterm_size*
-                  Specifies the size of the scratchpad terminal.
-                  Relative to default quickterm logic.
-                  Defaults to >
-                    let g:nvimux_quickterm_size = ''
-
-g:nvimux_open_term_by_default                 *g:nvimux_open_term_by_default*
-                  If set, |nvimux_prefix|c will open a terminal instead of an
-                  empty buffer.
-                  Is not set by default.
-
-g:nvimux_override_{command}                        *g:nvomux_override_command*
-                  Allows overriding commands with custom commands:
-                  Example >
-                    let g:nvimux_override_c = ':echomsg "Open tab" \| tabe'
-
-g:nvimux_custom_bindings                            *g:nvimux_custom_bindings*
-                  Allows custom bindings using nvimux's bind function.
-                  Takes a list with three parameters:
-                    key => Key to be set after <prefix>
-                    command => the command to be used with the binding
-                    modes => for which modes it will be valid. Supports:
-                      'n' => Normal Mode
-                      'v' => Visual Mode
-                      'i' => Insert Mode; Prefixes command with '<ESC>'
-                      't' => Terminal Mode' Prefixes with <C-\><C-n>
-                  Example >
-                    let g:nvimux_custom_bindings = [
-                      \['s', ':sp<CR>', ['n', 'v', 'i', 't']],
-                      \['v', ':vs<CR>', ['n', 'v', 'i', 't']]
-                    \]
-
-g:nvimux_vertical_split                              *g:nvimux_vertical_split*
-                  Determines how nvimux splits vertically.
-                  Defaults to >
-                    let g:nvimux_vertical_split = ':NvimuxVerticalSplit<CR>'
-
-g:nvimux_horizontal_split                          *g:nvimux_horizontal_split*
-                  Determines how nvimux splits horizontally.
-                  Defaults to >
-                    let g:nvimux_horizontal_split = ':NvimuxHorizontalSplit<CR>'
-
-g:nvimux_quickterm_scope                            *g:nvimux_quickterm_scope*
-                  Specifies the scope available for the quickterm.
-                  If set to global scope, the quickterm will be shared across
-                  tabs. If tab-local, each tab will have its own quickterm.
-                  Defaults to >
-                    let g:nvimux_quickterm_scope = 'g'
-
-                  Tab-local config >
-                    let g:nvimux_quickterm_scope = 't'
-
-==============================================================================
-Credits                                                       *nvimux-credits*
+Credits                                                      *nvimux-credits*
 
 Plugin created by Henry Kupty <hkupty@gmail.com>.
 It is free to use and extend. Please consider opening a pull request if
