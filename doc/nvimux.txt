@@ -62,7 +62,7 @@ NvimuxTermRename new-term-name                             *NvimuxTermRename*
 
 
 =============================================================================
-API                                                             *nvimux-ampi*
+API                                                              *nvimux-api*
 
 nvimux is implemented completely in lua with its commands essentially falling
 back to a lua implementation.
@@ -73,15 +73,16 @@ There is one main module where the important functions sit, which is `nvimux`
 nvimux.setup({opts})                                           *nvimux.setup*
   Takes a map of options (possibly empty) and initializes nvimux
 
-  `require("nvimux").setup{
+>
+  require("nvimux").setup{
      config = {
        prefix = '<c-a>'
      },
      bindings = {
        {{'n'}, '<space>', function() print('hello!') end,}
      }
-   }`
-
+   }
+<
 
 =============================================================================
 Credits                                                      *nvimux-credits*
