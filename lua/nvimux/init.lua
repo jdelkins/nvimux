@@ -17,7 +17,6 @@ local nvimux = {}
 local bindings = require('nvimux.bindings')
 local vars = require('nvimux.vars')
 local fns = require('nvimux.fns')
-local ui = require('nvimux.ui')
 
 nvimux.debug = {}
 nvimux.bindings = bindings
@@ -71,6 +70,8 @@ bindings.map_table = {}
 -- Deprecated
 local win_cmd = function(create_window)
       local select_buffer
+      vim.cmd(create_window)
+
     if type(vars.new_window) == "function" then
       select_buffer = vars.new_window
     else
@@ -79,13 +80,17 @@ local win_cmd = function(create_window)
       end
     end
 
-    ui.on_new(create_window, select_buffer)
+    select_buffer()
+
 end
 
 -- Deprecated
 local tab_cmd = function(create_window)
   local select_buffer
+  vim.cmd(create_window)
+
   local selector = nvimux.context.new_tab or nvimux.context.new_window
+
   if type(selector) == "function" then
     select_buffer = selector
   else
@@ -94,7 +99,7 @@ local tab_cmd = function(create_window)
     end
   end
 
-  ui.on_new(create_window, select_buffer)
+  select_buffer()
 end
 
 nvimux.commands.horizontal_split = function() return win_cmd[[spl|wincmd j]] end
