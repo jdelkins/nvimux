@@ -19,46 +19,22 @@ A lua-based configuration for nvimux is as follows:
 
 ```lua
 lua << EOF
-local nvimux = require('nvimux')
-
 -- Nvimux configuration
-nvimux.config.set_all{
-  prefix = '<C-a>',
-  new_window = 'enew', -- Use 'term' if you want to open a new term for every new window
-  new_tab = nil, -- Defaults to new_window. Set to 'term' if you want a new term for every new tab
-  new_window_buffer = 'single',
-  quickterm_direction = 'botright',
-  quickterm_orientation = 'vertical',
-  quickterm_scope = 't', -- Use 'g' for global quickterm
-  quickterm_size = '80',
+require('nvimux').setup{
+  config = {
+    prefix = '<C-a>',
+  }
+  bindings = {
+    {{'n', 'v', 'i', 't'}, 's', ':NvimuxHorizontalSplit'},
+    {{'n', 'v', 'i', 't'}, 'v', ':NvimuxVerticalSplit'},
+  }
 }
-
--- Nvimux custom bindings
-nvimux.bindings.bind_all{
-  {'s', ':NvimuxHorizontalSplit', {'n', 'v', 'i', 't'}},
-  {'v', ':NvimuxVerticalSplit', {'n', 'v', 'i', 't'}},
-}
-
--- Required so nvimux sets the mappings correctly
-nvimux.bootstrap()
 EOF
 ```
 
 In case you don't set configuration options, please do run the following for nvimux to work:
 ```lua
-lua require('nvimux').bootstrap()
-```
-
-On viml, the variables can be defined using the same name, prepending `nvimux_` to it:
-
-```viml
-  let g:nvimux_prefix = '<C-a>',
-  let g:nvimux_open_term_by_default = true,
-  let g:nvimux_new_window_buffer = 'single',
-  let g:nvimux_quickterm_direction = 'botright',
-  let g:nvimux_quickterm_orientation = 'vertical',
-  let g:nvimux_quickterm_scope = 't',
-  let g:nvimux_quickterm_size = '80',
+lua require('nvimux').setup{}
 ```
 
 ## Credits & Stuff
