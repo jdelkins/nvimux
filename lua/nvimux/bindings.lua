@@ -1,7 +1,6 @@
 local bindings = {}
 local vars = require('nvimux.vars')
 local fns = {}
-local nvim = vim.api -- luacheck: ignore
 
 local consts = {
   terminal_quit = '<C-\\><C-n>',
@@ -17,7 +16,7 @@ fns.nvim_do_bind = function(options)
       if suffix == nil then
         suffix = string.sub(cfg.mapping, 1, 1) == ':' and '<CR>' or ''
       end
-      nvim.nvim_command(mode .. 'noremap <silent> ' .. prefix .. cfg.key .. ' ' .. escape_prefix .. cfg.mapping .. suffix)
+      vim.cmd(mode .. 'noremap <silent> ' .. prefix .. cfg.key .. ' ' .. escape_prefix .. cfg.mapping .. suffix)
   end
 end
 
@@ -49,6 +48,39 @@ bindings.bind_all = function(options)
   for _, bind in ipairs(options) do
     local key, cmd, modes = unpack(bind)
     bindings.mappings[key] = bindings.create_binding(modes, cmd)
+  end
+end
+
+bindings.keymap = function(binding, context)
+  local options = {silent = true}
+
+  if (type(binding[3]) == "function") then
+    vim.keymap.set(binding[1], context.prefix .. binding[2], binding[3], options)
+  elseif (type(binding[3]) == "string") then
+    local suffix = ''
+
+    if binding.suffix == nil then
+      -- TODO revisit
+      suffix = string.sub(binding[3], 1, 1) == ':' and '<CR>' or ''
+    else
+      suffix = binding.suffix
+    end
+
+    if vim.tbl_contains(binding[1], 't') then
+      binding[1] = vim.tbl_filter(function(mode) return mode ~= 't' end, binding[1])
+      vim.keymap.set('t',
+        context.prefix .. binding[2],
+        consts.terminal_quit .. binding[3] .. suffix,
+        options)
+    elseif vim.tbl_contains(binding[1], 'i') then
+      binding[1] = vim.tbl_filter(function(mode) return mode ~= 'i' end, binding[1])
+      vim.keymap.set('i',
+        context.prefix .. binding[2],
+        consts.esc .. binding[3] .. suffix,
+        options)
+    end
+
+    vim.keymap.set(binding[1], context.prefix .. binding[2], binding[3] .. suffix, options)
   end
 end
 

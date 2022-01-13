@@ -1,35 +1,45 @@
---[[
-Nvimux: Neovim as a terminal multiplexer.
-
-This is the lua reimplementation of VimL.
---]]
+--- Neovim as a tmux replacement
+-- nvimux is a wrapper on top of neovim's binding API
+-- that conveniently sets up tmux bindings to neovim.
+-- @author hkupty
+-- @module nvimux
 -- luacheck: globals unpack
 
-local state = {}
+local __dep_warn = true
+local deprecated = function(msg)
+  if __dep_warn then
+    print(msg)
+    __dep_warn = false
+  end
+end
+
 local nvimux = {}
 local bindings = require('nvimux.bindings')
 local vars = require('nvimux.vars')
 local fns = require('nvimux.fns')
+
 nvimux.debug = {}
 nvimux.bindings = bindings
 nvimux.config = {}
 nvimux.term = {}
 nvimux.term.prompt = {}
+nvimux.commands = {}
 
 -- [ Private variables and tables
-local nvim = vim.api -- luacheck: ignore
 local nvim_proxy = {
   __index = function(_, key)
+    deprecated("Don't use the proxy to vim vars. It will be removed in the next version")
     local key_ = 'nvimux_' .. key
     local val = nil
-    if fns.exists(key_) then
-      val = nvim.nvim_get_var(key_)
+    if vim.fn.exists(key_) == 1 then
+      val = vim.api.nvim_get_var(key_)
     end
     return val
   end
 }
 
 -- [[ Table of default bindings
+-- Deprecated
 bindings.mappings = {
   ['<C-r>']  = { nvi  = {':so $MYVIMRC'}},
   ['!']      = { nvit = {':wincmd T'}},
@@ -57,16 +67,97 @@ bindings.mappings = {
 
 bindings.map_table = {}
 
+-- Deprecated
+local win_cmd = function(create_window)
+      local select_buffer
+      vim.cmd(create_window)
+
+    if type(vars.new_window) == "function" then
+      select_buffer = vars.new_window
+    else
+      select_buffer = function()
+        vim.api.nvim_command(vars.new_window)
+      end
+    end
+
+    select_buffer()
+
+end
+
+-- Deprecated
+local tab_cmd = function(create_window)
+  local select_buffer
+  vim.cmd(create_window)
+
+  local selector = nvimux.context.new_tab or nvimux.context.new_window
+
+  if type(selector) == "function" then
+    select_buffer = selector
+  else
+    select_buffer = function()
+      vim.api.nvim_command(selector)
+    end
+  end
+
+  select_buffer()
+end
+
+nvimux.commands.horizontal_split = function() return win_cmd[[spl|wincmd j]] end
+nvimux.commands.vertical_split = function() return win_cmd[[vspl|wincmd l]] end
+nvimux.commands.new_tab = function() return tab_cmd[[tabe]] end
+
+-- Deprecated
 local nvimux_commands = {
-  {name = 'NvimuxHorizontalSplit', lazy_cmd = function() return [[spl|wincmd j|]] .. vars.new_window end},
-  {name = 'NvimuxVerticalSplit', lazy_cmd = function() return [[vspl|wincmd l|]] .. vars.new_window end},
   {name = 'NvimuxPreviousTab', cmd = [[lua require('nvimux').go_to_last_tab()]]},
-  {name = 'NvimuxNewTab', lazy_cmd = function() return [[tabe|]] .. (vars.new_tab or vars.new_window) end},
   {name = 'NvimuxSet', cmd = [[lua require('nvimux').config.set_fargs(<f-args>)]], nargs='+'},
 }
 
 local autocmds = {
   {event = "TabLeave", target="*", cmd = [[lua require('nvimux').set_last_tab()]]},
+}
+
+local mappings = {
+  -- Reload global configs
+  {{'n', 'v', 'i'},      '<C-r>', ':so $MYVIMRC'},
+
+  -- Window management
+  {{'n', 'v', 'i', 't'}, '!',  ':wincmd T'},
+  {{'n', 'v', 'i', 't'}, '%',  nvimux.commands.vertical_split},
+  {{'n', 'v', 'i', 't'}, '\"', nvimux.commands.horizontal_split},
+  {{'n', 'v', 'i', 't'}, '-',  nvimux.go_to_last_tab},
+  {{'n', 'v', 'i', 't'}, 'q',  nvimux.term.toggle },
+  {{'n', 'v', 'i', 't'}, 'w',  ':tabs'},
+  {{'n', 'v', 'i', 't'}, 'o',  '<C-w>w'},
+  {{'n', 'v', 'i', 't'}, 'n',  'gt'},
+  {{'n', 'v', 'i', 't'}, 'p',  'gT'},
+  {{'n', 'v', 'i'},      'x',  ':bd %'},
+  {{'t'},                'x',  function() vim.api.nvim_buf_delete(0, {force = true}) end},
+  {{'n', 'v', 'i'},      'X',  ':enew \\| bd #'},
+
+  -- Moving around
+  {{'n', 'v', 'i', 't'}, 'h',  '<C-w><C-h>'},
+  {{'n', 'v', 'i', 't'}, 'j',  '<C-w><C-j>'},
+  {{'n', 'v', 'i', 't'}, 'k',  '<C-w><C-k>'},
+  {{'n', 'v', 'i', 't'}, 'l',  '<C-w><C-l>'},
+
+  -- Term facilities
+  {{'t'},                ':',  ':', suffix = ''},
+  {{'t'},                '[',  ''},
+  {{'t'},                ']',  function() nvimux.term_only{cmd = 'normal pa'} end},
+  {{'t'},                ',',  nvimux.term.prompt.rename},
+
+  -- Tab management
+  {{'n', 'v', 'i', 't'}, 'c',  nvimux.commands.new_tab},
+  {{'n', 'v', 'i', 't'}, '0',  '0gt'},
+  {{'n', 'v', 'i', 't'}, '1',  '1gt'},
+  {{'n', 'v', 'i', 't'}, '2',  '2gt'},
+  {{'n', 'v', 'i', 't'}, '3',  '3gt'},
+  {{'n', 'v', 'i', 't'}, '4',  '4gt'},
+  {{'n', 'v', 'i', 't'}, '5',  '5gt'},
+  {{'n', 'v', 'i', 't'}, '6',  '6gt'},
+  {{'n', 'v', 'i', 't'}, '7',  '7gt'},
+  {{'n', 'v', 'i', 't'}, '8',  '8gt'},
+  {{'n', 'v', 'i', 't'}, '9',  '9gt'},
 }
 
 -- ]]
@@ -75,73 +166,31 @@ setmetatable(vars, nvim_proxy)
 
 -- ]
 
--- [[ Set var
-fns.variables = {}
-fns.variables.scoped = {
-  arg = {
-    b = function() return nvim.nvim_get_current_buf() end,
-    t = function() return nvim.nvim_get_current_tabpage() end,
-    l = function() return nvim.nvim_get_current_win() end,
-    g = function() return nil end,
-  },
-  set = {
-    b = function(options) return nvim.nvim_buf_set_var(options.nr, options.name, options.value) end,
-    t = function(options) return nvim.nvim_tabpage_set_var(options.nr, options.name, options.value) end,
-    l = function(options) return nvim.nvim_win_set_var(options.nr, options.name, options.value) end,
-    g = function(options) return nvim.nvim_set_var(options.name, options.value) end,
-  },
-  get = {
-    b = function(options)
-      return fns.exists('b:' .. options.name) and nvim.nvim_buf_get_var(options.nr, options.name) or nil
-    end,
-    t = function(options)
-      return fns.exists('t:' .. options.name) and nvim.nvim_tabpage_get_var(options.nr, options.name) or nil
-    end,
-    l = function(options)
-      return fns.exists('l:' .. options.name) and nvim.nvim_win_get_var(options.nr, options.name) or nil
-    end,
-    g = function(options)
-      return fns.exists('g:' .. options.name) and nvim.nvim_get_var(options.name) or nil
-    end,
-  },
-}
-
-fns.variables.set = function(options)
-  local mode = options.mode or 'g'
-  options.nr = options.nr or fns.variables.scoped.arg[mode]()
-  fns.variables.scoped.set[mode](options)
-end
-
-fns.variables.get = function(options)
-  local mode = options.mode or 'g'
-  options.nr = options.nr or fns.variables.scoped.arg[mode]()
-  return fns.variables.scoped.get[mode](options)
-end
-
--- ]]
 -- ]
 
-nvimux.do_autocmd = function()
+nvimux.do_autocmd = function(commands)
   local au = {"augroup nvimux"}
-  for _, v in ipairs(autocmds) do
+  for _, v in ipairs(commands) do
     table.insert(au, "au! " .. v.event .. " " .. v.target .. " " .. v.cmd)
   end
   table.insert(au, "augroup END")
-  nvim.nvim_call_function("execute", {au})
+  vim.fn.execute(au)
 end
 
 -- [ Public API
 -- [[ Config-handling commands
 nvimux.config.set = function(options)
+  deprecated("nvimux.config.set is deprecated. Use nvimux.setup")
   vars[options.key] = options.value
-  nvim.nvim_set_var('nvimux_' .. options.key, options.value)
 end
 
 nvimux.config.set_fargs = function(key, value)
+  deprecated("nvimux.config.set_fargs is deprecated. Use nvimux.setup")
   nvimux.config.set{key=key, value=value}
 end
 
 nvimux.config.set_all = function(options)
+  deprecated("nvimux.config.set_all is deprecated. Use nvimux.setup")
   for key, value in pairs(options) do
     nvimux.config.set{['key'] = key, ['value'] = value}
   end
@@ -149,34 +198,36 @@ end
 -- ]]
 
 -- [[ Quickterm
+-- TODO port
 nvimux.term.new_toggle = function()
-  local split_type = vars:split_type()
-  nvim.nvim_command(split_type .. ' | enew | ' .. vars.quickterm_command)
-  local buf_nr = nvim.nvim_call_function('bufnr', {'%'})
-  nvim.nvim_set_option('wfw', true)
-  fns.variables.set{mode='b', nr=buf_nr, name='nvimux_buf_orientation', value=split_type}
-  fns.variables.set{mode=vars.quickterm_scope, name='nvimux_last_buffer_id', value=buf_nr}
+  local split_type = nvimux.context.quickterm:split_type()
+  vim.cmd(split_type .. ' | enew | ' .. nvimux.context.quickterm.command)
+  local buf_nr = vim.fn.bufnr('%')
+  vim.wo.wfw = true
+  vim.b[buf_nr].nvimux_buf_orientation = split_type
+  vim[nvimux.context.quickterm.scope].nvimux_last_buffer_id = buf_nr
 end
 
+-- TODO port
 nvimux.term.toggle = function()
   -- TODO Allow external commands
-  local buf_nr = fns.variables.get{mode=vars.quickterm_scope, name='nvimux_last_buffer_id'}
+  local buf_nr = vim.g.nvimux_last_buffer_id
 
   if not buf_nr then
     nvimux.term.new_toggle()
   else
     local id = math.floor(buf_nr)
-    local window = nvim.nvim_call_function('bufwinnr', {id})
+    local window = vim.fn.bufwinnr(id)
 
     if window == -1 then
-      if nvim.nvim_call_function('bufname', {id}) == '' then
+      if vim.fn.bufname(id) == '' then
         nvimux.term.new_toggle()
       else
-        local split_type = nvim.nvim_buf_get_var(id, 'nvimux_buf_orientation')
-        nvim.nvim_command(split_type .. ' | b' .. id)
+        local split_type = vim.b[buf_nr].nvimux_buf_orientation
+        vim.cmd(split_type .. ' | b' .. id)
       end
     else
-      nvim.nvim_command(window .. ' wincmd w | q | stopinsert')
+      vim.cmd(window .. ' wincmd w | q | stopinsert')
     end
   end
 end
@@ -184,7 +235,7 @@ end
 nvimux.term.prompt.rename = function()
   nvimux.term_only{
     cmd = fns.prompt('nvimux > New term name: '),
-    action = function(k) nvim.nvim_command('file term://' .. k) end
+    action = function(k) vim.api.nvim_command('file term://' .. k) end
   }
 end
 -- ]]
@@ -193,62 +244,46 @@ end
 -- ]]
 
 -- [[ Top-level commands
-nvimux.debug.vars = function()
-  for k, v in pairs(vars) do
-    print(k, v)
-  end
+nvimux.debug.context = function()
+  print(vim.inspect(nvimux.context))
 end
 
 nvimux.debug.bindings = function()
-  local has, inspect = pcall(require, "inspect")
-  for k, v in pairs(bindings.mappings) do
-    if has then
-      print(k, inspect(v))
-    else
-      -- TODO better fallback debug
-      print(k, v)
-    end
-  end
-end
-
-
-nvimux.debug.map_table = function()
-  for k, v in pairs(bindings.map_table) do
-    print(k, v)
-  end
+  print(vim.inspect(nvimux.context.bindings))
 end
 
 nvimux.debug.state = function()
-  print(require("inspect")(state))
+  print(vim.inspect(nvimux.context.state))
 end
 
 nvimux.term_only = function(options)
-  local action = options.action or nvim.nvim_command
-  if nvim.nvim_buf_get_option('%', 'buftype') == 'terminal' then
+  local action = options.action or vim.api.nvim_command
+  if vim.bo.buftype == 'terminal' then
     action(options.cmd)
   else
     print("Not on terminal")
   end
 end
 
+-- deprecated
 nvimux.mapped = function(options)
   local mapping = bindings.map_table[options.key]
   local ret = mapping.arg()
-  if ret ~= '' then
-    nvim.nvim_command(ret)
+  if ret ~= '' and ret ~= nil then
+    vim.cmd(ret)
   end
 end
 
 nvimux.set_last_tab = function(tabn)
   if tabn == nil then
-    tabn = nvim.nvim_call_function('tabpagenr', {})
+    tabn = vim.fntabpagenr()
   end
 
-  state.last_tab = tabn
+  nvimux.context.state.last_tab = tabn
 end
 
 nvimux.go_to_last_tab = function()
-  nvim.nvim_command((state.last_tab or 1)  .. 'tabn')
+  vim.cmd((nvimux.context.state.last_tab or 1)  .. 'tabn')
 end
 
  -- ]]
@@ -256,6 +291,7 @@ end
 
 
 nvimux.bootstrap = function(force)
+  deprecated("nvimux.bootstrap is deprecated. Use nvimux.setup")
   if force or nvimux.loaded == nil then
     for i=1, 9 do
       bindings.mappings[i] = bindings.create_binding({"n", "v", "i", "t"} , i .. 'gt')
@@ -281,11 +317,42 @@ nvimux.bootstrap = function(force)
       end
     end
     fns.build_cmd{name = 'NvimuxReload', cmd = 'lua require("nvimux").bootstrap(true)'}
-    nvimux.do_autocmd()
+    nvimux.do_autocmd(autocmds)
     nvimux.loaded = true
   end
 end
 -- ]
 
+--- Configure nvimux to start with the supplied arguments
+-- It can be configured to use the defaults by only supplying an empty table.
+-- This function must be called to initalize nvimux.
+-- @function nvimux.setup
+-- @tparam opts table of configuration
+-- @tparam opts.config table properties for nvimux
+-- @tparam opts.bindings table Bindings to be configured with nvimux
+-- @tparam opts.autocmds table autocmds that belong to the same logical group than nvimux
+-- @see nvimux.vars for the defaults
+nvimux.setup = function(opts)
+  if (vim.keymap == nil) then
+    print("Aborting setup of nvimux. vim.keymap not found")
+    return
+  end
+  -- TODO Remove global vars, make it local to context only
+  vars = vim.tbl_deep_extend("force", vars or {}, opts.config or {})
+
+  local context = vars
+  context.bindings = vim.tbl_deep_extend("force", mappings, opts.bindings or {})
+
+  for _, binding in ipairs(context.bindings) do
+    bindings.keymap(binding, context)
+  end
+
+  context.autocmds = vim.tbl_deep_extend("force", autocmds, opts.autocmds or {})
+  nvimux.do_autocmd(context.autocmds)
+
+  context.state = {}
+
+  nvimux.context = context
+end
 
 return nvimux
