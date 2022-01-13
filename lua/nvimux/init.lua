@@ -276,7 +276,7 @@ end
 
 nvimux.set_last_tab = function(tabn)
   if tabn == nil then
-    tabn = vim.fntabpagenr()
+    tabn = vim.fn.tabpagenr()
   end
 
   nvimux.context.state.last_tab = tabn
