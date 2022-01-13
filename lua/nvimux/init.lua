@@ -333,10 +333,6 @@ end
 -- @tparam opts.autocmds table autocmds that belong to the same logical group than nvimux
 -- @see nvimux.vars for the defaults
 nvimux.setup = function(opts)
-  if (vim.keymap == nil) then
-    print("Aborting setup of nvimux. vim.keymap not found")
-    return
-  end
   -- TODO Remove global vars, make it local to context only
   vars = vim.tbl_deep_extend("force", vars or {}, opts.config or {})
 
