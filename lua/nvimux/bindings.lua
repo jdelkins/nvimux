@@ -51,16 +51,23 @@ bindings.bind_all = function(options)
   end
 end
 
-if vim.keymap.set ~= nil then
+if vim.keymap ~= nil then
   bindings.set_keymap = vim.keymap.set
 else
+  bindings.mapping = {}
   bindings.set_keymap = function(mode, rhs, lhs, options)
     if type(lhs) == "function" then
       local id = #bindings.mapping + 1
       bindings.mapping[id] = lhs
       lhs = [[<Cmd>lua require("nvimux.bindings").do_mapping(]] .. id .. [[)<CR>]]
     end
-    vim.api.nvim_set_keymap(mode, rhs, lhs, options)
+    if type(mode) == "table" then
+      for _, m in ipairs(mode) do
+        vim.api.nvim_set_keymap(m, rhs, lhs, options)
+      end
+    else
+      vim.api.nvim_set_keymap(mode, rhs, lhs, options)
+    end
   end
 end
 
