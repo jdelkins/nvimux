@@ -3,13 +3,13 @@ local vars = {}
 local _buf = nil
 
 local singleton_buf = function()
-  if _buf == nil or not vim.api.nvim_buf_is_loaded(ui._buf) then
+  if _buf == nil or not vim.api.nvim_buf_is_loaded(_buf) then
     local content
 
     _buf = vim.api.nvim_create_buf(false, true)
     local tp = type(vars.scratch_buf_content)
     if (tp == "table") then
-      content = tp
+      content = vars.scratch_buf_content
     elseif (tp == "function") then
       content = vars.scratch_buf_content()
     else
