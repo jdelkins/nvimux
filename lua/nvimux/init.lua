@@ -337,7 +337,10 @@ nvimux.setup = function(opts)
   vars = vim.tbl_deep_extend("force", vars or {}, opts.config or {})
 
   local context = vars
-  context.bindings = vim.tbl_deep_extend("force", mappings, opts.bindings or {})
+  context.bindings = mappings
+  for _, b in ipairs(opts.bindings) do
+    table.insert(context.bindings, b)
+  end
 
   for _, binding in ipairs(context.bindings) do
     bindings.keymap(binding, context)
