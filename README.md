@@ -23,7 +23,7 @@ lua << EOF
 require('nvimux').setup{
   config = {
     prefix = '<C-a>',
-  }
+  },
   bindings = {
     {{'n', 'v', 'i', 't'}, 's', ':NvimuxHorizontalSplit'},
     {{'n', 'v', 'i', 't'}, 'v', ':NvimuxVerticalSplit'},
