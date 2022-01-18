@@ -53,9 +53,77 @@ nvimux.commands.horizontal_split = function() return win_cmd[[spl|wincmd j]] end
 nvimux.commands.vertical_split = function() return win_cmd[[vspl|wincmd l]] end
 nvimux.commands.new_tab = function() return tab_cmd[[tabe]] end
 
+-- [[ Quickterm
+-- TODO port
+nvimux.term.new_toggle = function()
+  local split_type = nvimux.context.quickterm:split_type()
+  vim.cmd(split_type .. ' | enew | ' .. nvimux.context.quickterm.command)
+  local buf_nr = vim.fn.bufnr('%')
+  vim.wo.wfw = true
+  vim.b[buf_nr].nvimux_buf_orientation = split_type
+  vim[nvimux.context.quickterm.scope].nvimux_last_buffer_id = buf_nr
+end
+
+-- TODO port
+nvimux.term.toggle = function()
+  -- TODO Allow external commands
+  local buf_nr = vim.g.nvimux_last_buffer_id
+
+  if not buf_nr then
+    nvimux.term.new_toggle()
+  else
+    local id = math.floor(buf_nr)
+    local window = vim.fn.bufwinnr(id)
+
+    if window == -1 then
+      if vim.fn.bufname(id) == '' then
+        nvimux.term.new_toggle()
+      else
+        local split_type = vim.b[buf_nr].nvimux_buf_orientation
+        vim.cmd(split_type .. ' | b' .. id)
+      end
+    else
+      vim.cmd(window .. ' wincmd w | q | stopinsert')
+    end
+  end
+end
+
+nvimux.term.rename = function()
+  vim.ui.input(
+    {prompt = 'nvimux > New term name: '},
+    function(name)
+      nvimux.term_only{
+        cmd = name,
+        action = function(k) vim.api.nvim_command('file term://' .. k) end
+      }
+    end)
+end
+
+nvimux.term_only = function(options)
+  local action = options.action or vim.api.nvim_command
+  if vim.bo.buftype == 'terminal' then
+    action(options.cmd)
+  else
+    print("Not on terminal")
+  end
+end
+
+nvimux.set_last_tab = function(tabn)
+  if tabn == nil then
+    tabn = vim.fn.tabpagenr()
+  end
+
+  nvimux.context.state.last_tab = tabn
+end
+
+nvimux.go_to_last_tab = function()
+  vim.cmd((nvimux.context.state.last_tab or 1)  .. 'tabn')
+end
+
+-- ]]
+
 local nvimux_commands = {
   {name = 'NvimuxPreviousTab', cmd = [[lua require('nvimux').go_to_last_tab()]]},
-  {name = 'NvimuxSet', cmd = [[lua require('nvimux').config.set_fargs(<f-args>)]], nargs='+'},
 }
 
 local autocmds = {
@@ -90,7 +158,7 @@ local mappings = {
   {{'t'},                ':',  ':', suffix = ''},
   {{'t'},                '[',  ''},
   {{'t'},                ']',  function() nvimux.term_only{cmd = 'normal pa'} end},
-  {{'t'},                ',',  nvimux.term.prompt.rename},
+  {{'t', 'n'},           ',',  nvimux.term.rename},
 
   -- Tab management
   {{'n', 'v', 'i', 't'}, 'c',  nvimux.commands.new_tab},
@@ -120,119 +188,6 @@ nvimux.do_autocmd = function(commands)
   table.insert(au, "augroup END")
   vim.fn.execute(au)
 end
-
--- [ Public API
--- [[ Config-handling commands
-nvimux.config.set = function(options)
-  deprecated("nvimux.config.set is deprecated. Use nvimux.setup")
-  vars[options.key] = options.value
-end
-
-nvimux.config.set_fargs = function(key, value)
-  deprecated("nvimux.config.set_fargs is deprecated. Use nvimux.setup")
-  nvimux.config.set{key=key, value=value}
-end
-
-nvimux.config.set_all = function(options)
-  deprecated("nvimux.config.set_all is deprecated. Use nvimux.setup")
-  for key, value in pairs(options) do
-    nvimux.config.set{['key'] = key, ['value'] = value}
-  end
-end
--- ]]
-
--- [[ Quickterm
--- TODO port
-nvimux.term.new_toggle = function()
-  local split_type = nvimux.context.quickterm:split_type()
-  vim.cmd(split_type .. ' | enew | ' .. nvimux.context.quickterm.command)
-  local buf_nr = vim.fn.bufnr('%')
-  vim.wo.wfw = true
-end
--- ]]
-
--- [[ Bindings
--- ]]
-
--- [[ Top-level commands
-nvimux.debug.context = function()
-  print(vim.inspect(nvimux.context))
-end
-
-nvimux.debug.bindings = function()
-  print(vim.inspect(nvimux.context.bindings))
-end
-
-nvimux.debug.state = function()
-  print(vim.inspect(nvimux.context.state))
-end
-
-nvimux.term_only = function(options)
-  local action = options.action or vim.api.nvim_command
-  if vim.bo.buftype == 'terminal' then
-    action(options.cmd)
-  else
-    print("Not on terminal")
-  end
-end
-
--- deprecated
-nvimux.mapped = function(options)
-  local mapping = bindings.map_table[options.key]
-  local ret = mapping.arg()
-  if ret ~= '' and ret ~= nil then
-    vim.cmd(ret)
-  end
-end
-
-nvimux.set_last_tab = function(tabn)
-  if tabn == nil then
-    tabn = vim.fn.tabpagenr()
-  end
-
-  nvimux.context.state.last_tab = tabn
-end
-
-nvimux.go_to_last_tab = function()
-  vim.cmd((nvimux.context.state.last_tab or 1)  .. 'tabn')
-end
-
- -- ]]
--- ]
-
-
-nvimux.bootstrap = function(force)
-  deprecated("nvimux.bootstrap is deprecated. Use nvimux.setup")
-  if force or nvimux.loaded == nil then
-    for i=1, 9 do
-      bindings.mappings[i] = bindings.create_binding({"n", "v", "i", "t"} , i .. 'gt')
-    end
-
-    for _, cmd in ipairs(nvimux_commands) do
-      fns.build_cmd(cmd)
-    end
-
-    for key, cmd in pairs(bindings.mappings) do
-      for modes, binds in pairs(cmd) do
-        modes = fns.split(modes)
-        local arg = table.remove(binds, 1)
-        binds.key = key
-        binds.modes = modes
-        if type(arg) == 'function' then
-          bindings.map_table[key] = {['arg'] = arg, ['action'] = nil}
-          binds.mapping = ":lua require('nvimux').mapped{key = '" .. key .. "'}"
-        else
-          binds.mapping = arg
-        end
-        bindings.bind(binds)
-      end
-    end
-    fns.build_cmd{name = 'NvimuxReload', cmd = 'lua require("nvimux").bootstrap(true)'}
-    nvimux.do_autocmd(autocmds)
-    nvimux.loaded = true
-  end
-end
--- ]
 
 --- Configure nvimux to start with the supplied arguments
 -- It can be configured to use the defaults by only supplying an empty table.
