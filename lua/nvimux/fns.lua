@@ -1,12 +1,5 @@
 local fns = {}
 
-fns.prompt = function(message)
-  vim.fn.inputsave()
-  local ret = vim.fn.input(message)
-  vim.fn.inputrestore()
-  return ret
-end
-
 fns.split = function(str)
   local p = {}
   for i=1, #str do
