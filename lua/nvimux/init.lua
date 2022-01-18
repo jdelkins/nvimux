@@ -5,69 +5,18 @@
 -- @module nvimux
 -- luacheck: globals unpack
 
-local __dep_warn = true
-local deprecated = function(msg)
-  if __dep_warn then
-    print(msg)
-    __dep_warn = false
-  end
-end
-
 local nvimux = {}
 local bindings = require('nvimux.bindings')
 local vars = require('nvimux.vars')
 local fns = require('nvimux.fns')
 
-nvimux.debug = {}
 nvimux.bindings = bindings
 nvimux.config = {}
 nvimux.term = {}
-nvimux.term.prompt = {}
 nvimux.commands = {}
-
--- [ Private variables and tables
-local nvim_proxy = {
-  __index = function(_, key)
-    deprecated("Don't use the proxy to vim vars. It will be removed in the next version")
-    local key_ = 'nvimux_' .. key
-    local val = nil
-    if vim.fn.exists(key_) == 1 then
-      val = vim.api.nvim_get_var(key_)
-    end
-    return val
-  end
-}
-
--- [[ Table of default bindings
--- Deprecated
-bindings.mappings = {
-  ['<C-r>']  = { nvi  = {':so $MYVIMRC'}},
-  ['!']      = { nvit = {':wincmd T'}},
-  ['%']      = { nvit = {function() return vars.vertical_split end}},
-  ['\"']     = { nvit = {function() return vars.horizontal_split end}},
-  ['-']      = { nvit = {':NvimuxPreviousTab'}},
-  ['q']      = { nvit = {':NvimuxToggleTerm'}},
-  ['w']      = { nvit = {':tabs'}},
-  ['o']      = { nvit = {'<C-w>w'}},
-  ['n']      = { nvit = {'gt'}},
-  ['p']      = { nvit = {'gT'}},
-  ['x']      = { nvi  = {':bd %'},
-                 t    = {function() return vars.close_term end}},
-  ['X']      = { nvi  = {':enew \\| bd #'}},
-  ['h']      = { nvit = {'<C-w><C-h>'}},
-  ['j']      = { nvit = {'<C-w><C-j>'}},
-  ['k']      = { nvit = {'<C-w><C-k>'}},
-  ['l']      = { nvit = {'<C-w><C-l>'}},
-  [':']      = { t    = {':', suffix = ''}},
-  ['[']      = { t    = {''}},
-  [']']      = { t    = {':NvimuxTermPaste'}},
-  [',']      = { t    = {'', nvimux.term.prompt.rename}},
-  ['c']      = { nvit = {':NvimuxNewTab'}},
-}
 
 bindings.map_table = {}
 
--- Deprecated
 local win_cmd = function(create_window)
       local select_buffer
       vim.cmd(create_window)
@@ -81,10 +30,8 @@ local win_cmd = function(create_window)
     end
 
     select_buffer()
-
 end
 
--- Deprecated
 local tab_cmd = function(create_window)
   local select_buffer
   vim.cmd(create_window)
@@ -106,7 +53,6 @@ nvimux.commands.horizontal_split = function() return win_cmd[[spl|wincmd j]] end
 nvimux.commands.vertical_split = function() return win_cmd[[vspl|wincmd l]] end
 nvimux.commands.new_tab = function() return tab_cmd[[tabe]] end
 
--- Deprecated
 local nvimux_commands = {
   {name = 'NvimuxPreviousTab', cmd = [[lua require('nvimux').go_to_last_tab()]]},
   {name = 'NvimuxSet', cmd = [[lua require('nvimux').config.set_fargs(<f-args>)]], nargs='+'},
@@ -166,8 +112,6 @@ setmetatable(vars, nvim_proxy)
 
 -- ]
 
--- ]
-
 nvimux.do_autocmd = function(commands)
   local au = {"augroup nvimux"}
   for _, v in ipairs(commands) do
@@ -204,39 +148,6 @@ nvimux.term.new_toggle = function()
   vim.cmd(split_type .. ' | enew | ' .. nvimux.context.quickterm.command)
   local buf_nr = vim.fn.bufnr('%')
   vim.wo.wfw = true
-  vim.b[buf_nr].nvimux_buf_orientation = split_type
-  vim[nvimux.context.quickterm.scope].nvimux_last_buffer_id = buf_nr
-end
-
--- TODO port
-nvimux.term.toggle = function()
-  -- TODO Allow external commands
-  local buf_nr = vim.g.nvimux_last_buffer_id
-
-  if not buf_nr then
-    nvimux.term.new_toggle()
-  else
-    local id = math.floor(buf_nr)
-    local window = vim.fn.bufwinnr(id)
-
-    if window == -1 then
-      if vim.fn.bufname(id) == '' then
-        nvimux.term.new_toggle()
-      else
-        local split_type = vim.b[buf_nr].nvimux_buf_orientation
-        vim.cmd(split_type .. ' | b' .. id)
-      end
-    else
-      vim.cmd(window .. ' wincmd w | q | stopinsert')
-    end
-  end
-end
-
-nvimux.term.prompt.rename = function()
-  nvimux.term_only{
-    cmd = fns.prompt('nvimux > New term name: '),
-    action = function(k) vim.api.nvim_command('file term://' .. k) end
-  }
 end
 -- ]]
 
