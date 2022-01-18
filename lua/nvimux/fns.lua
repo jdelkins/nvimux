@@ -15,4 +15,14 @@ fns.build_cmd = function(options)
   vim.cmd('command! -nargs=' .. nargs .. ' ' .. options.name .. ' ' .. cmd)
 end
 
+
+local function capitalize_first(s)
+	return string.upper(string.sub(s,1,1))..string.sub(s,2)
+end
+local function to_pascal(s)
+	return (string.gsub(capitalize_first(s),"_(%w+)",capitalize_first))
+end
+
+fns.snake_to_pascal = to_pascal
+
 return fns
