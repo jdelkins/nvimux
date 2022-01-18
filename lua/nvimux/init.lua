@@ -132,21 +132,21 @@ local autocmds = {
 
 local mappings = {
   -- Reload global configs
-  {{'n', 'v', 'i'},      '<C-r>', ':so $MYVIMRC'},
+  {{'n', 'v', 'i'},      '<C-r>', '<Cmd>source $MYVIMRC'},
 
   -- Window management
-  {{'n', 'v', 'i', 't'}, '!',  ':wincmd T'},
+  {{'n', 'v', 'i', 't'}, '!',  '<Cmd>wincmd T'},
   {{'n', 'v', 'i', 't'}, '%',  nvimux.commands.vertical_split},
   {{'n', 'v', 'i', 't'}, '\"', nvimux.commands.horizontal_split},
   {{'n', 'v', 'i', 't'}, '-',  nvimux.go_to_last_tab},
   {{'n', 'v', 'i', 't'}, 'q',  nvimux.term.toggle },
-  {{'n', 'v', 'i', 't'}, 'w',  ':tabs'},
+  {{'n', 'v', 'i', 't'}, 'w',  '<Cmd>tabs'},
   {{'n', 'v', 'i', 't'}, 'o',  '<C-w>w'},
   {{'n', 'v', 'i', 't'}, 'n',  'gt'},
   {{'n', 'v', 'i', 't'}, 'p',  'gT'},
-  {{'n', 'v', 'i'},      'x',  ':bd %'},
+  {{'n', 'v', 'i'},      'x',  '<Cmd>bdelete %'},
   {{'t'},                'x',  function() vim.api.nvim_buf_delete(0, {force = true}) end},
-  {{'n', 'v', 'i'},      'X',  ':enew \\| bd #'},
+  {{'n', 'v', 'i'},      'X',  '<Cmd>enew \\| bd #'},
 
   -- Moving around
   {{'n', 'v', 'i', 't'}, 'h',  '<C-w><C-h>'},
@@ -156,8 +156,8 @@ local mappings = {
 
   -- Term facilities
   {{'t'},                ':',  ':', suffix = ''},
-  {{'t'},                '[',  ''},
-  {{'t'},                ']',  function() nvimux.term_only{cmd = 'normal pa'} end},
+  {{'t'},                '[',  '<C-\\><C-n>'},
+  {{'t'},                ']',  function() vim.paste(vim.fn.getreg('"', 1, true), -1) end },
   {{'t', 'n'},           ',',  nvimux.term.rename},
 
   -- Tab management
