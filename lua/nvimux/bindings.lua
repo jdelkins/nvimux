@@ -33,8 +33,6 @@ end
 bindings.keymap = function(binding, context)
   local options = {silent = true}
 
-  print(vim.inspect(binding))
-
   if (type(binding[3]) == "function") then
     bindings.set_keymap(binding[1], context.prefix .. binding[2], binding[3], options)
   elseif (type(binding[3]) == "string") then
