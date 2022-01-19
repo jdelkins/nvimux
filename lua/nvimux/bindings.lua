@@ -37,16 +37,15 @@ bindings.keymap = function(binding, context)
     bindings.set_keymap(binding[1], context.prefix .. binding[2], binding[3], options)
   elseif (type(binding[3]) == "string") then
     local suffix = ''
-    local starts_with_colon = string.sub(binding[3], 1, 1) == ':'
 
     if binding.suffix == nil then
       -- TODO revisit
-      suffix = starts_with_colon and '<CR>' or ''
+      suffix = string.sub(binding[3], 1, 1) == ':' and '<CR>' or ''
     else
       suffix = binding.suffix
     end
 
-    if starts_with_colon then
+    if string.lower(string.sub(binding[3], 1, 5)) ~= "<cmd>" then
       if vim.tbl_contains(binding[1], 't') then
         binding[1] = vim.tbl_filter(function(mode) return mode ~= 't' end, binding[1])
         bindings.set_keymap('t',
