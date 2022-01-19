@@ -7,7 +7,6 @@
 
 local nvimux = {}
 local bindings = require('nvimux.bindings')
-local vars = require('nvimux.vars')
 local fns = require('nvimux.fns')
 
 nvimux.bindings = bindings
@@ -178,10 +177,6 @@ local mappings = {
 
 -- ]]
 
-setmetatable(vars, nvim_proxy)
-
--- ]
-
 --- Configure nvimux to start with the supplied arguments
 -- It can be configured to use the defaults by only supplying an empty table.
 -- This function must be called to initalize nvimux.
@@ -192,10 +187,8 @@ setmetatable(vars, nvim_proxy)
 -- @tparam opts.autocmds table autocmds that belong to the same logical group than nvimux
 -- @see nvimux.vars for the defaults
 nvimux.setup = function(opts)
-  -- TODO Remove global vars, make it local to context only
-  vars = vim.tbl_deep_extend("force", vars or {}, opts.config or {})
+  local context = vim.tbl_deep_extend("force", require('nvimux.vars'), opts.config or {})
 
-  local context = vars
   context.bindings = mappings
   for _, b in ipairs(opts.bindings) do
     table.insert(context.bindings, b)
