@@ -14,10 +14,14 @@ nvimux.term = {}
 nvimux.commands = setmetatable({},{
 
 __newindex = function(tbl, key, value)
-    vim.api.nvim_add_user_command("Nvimux"..fns.snake_to_pascal(key),
-      function(opts)
-        value(opts.args, opts)
-      end, {})
+    if vim.api.nvim_add_user_command then
+      vim.api.nvim_add_user_command("Nvimux"..fns.snake_to_pascal(key),
+        function(opts)
+          value(opts.args, opts)
+        end, {})
+    else
+      vim.api.nvim_command('command! Nvimux'..fns.snake_to_pascal(key).." lua require'nvimux'.commands."..key.."()")
+    end
     rawset(tbl, key, value)
   end
 })
