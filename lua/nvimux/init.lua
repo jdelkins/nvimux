@@ -9,7 +9,6 @@ local nvimux = {}
 local bindings = require('nvimux.bindings')
 local fns = require('nvimux.fns')
 
-nvimux.bindings = bindings
 nvimux.config = {}
 nvimux.term = {}
 nvimux.commands = setmetatable({},{
