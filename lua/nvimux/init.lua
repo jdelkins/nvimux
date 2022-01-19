@@ -47,37 +47,61 @@ nvimux.commands.toggle_term = nvimux.term.toggle
 nvimux.commands.term_rename = nvimux.term.rename
 -- ]]
 
+-- [[ Top-level helper functions
+nvimux.set_last_tab = function(tabn)
+  if tabn == nil then
+    tabn = vim.fn.tabpagenr()
+  end
+
+  nvimux.context.state.last_tab = tabn
+end
+
+nvimux.go_to_last_tab = function()
+  vim.cmd((nvimux.context.state.last_tab or 1)  .. 'tabn')
+end
+
+
+nvimux.do_autocmd = function(commands)
+  local au = {"augroup nvimux"}
+  for _, v in ipairs(commands) do
+    table.insert(au, "au! " .. v.event .. " " .. v.target .. " " .. v.cmd)
+  end
+  table.insert(au, "augroup END")
+  vim.fn.execute(au)
+end
+-- ]]
+
+
 -- [[ Quickterm
--- TODO port
 nvimux.term.new_toggle = function()
   local split_type = nvimux.context.quickterm:split_type()
-  vim.cmd(split_type .. ' | enew | ' .. nvimux.context.quickterm.command)
-  local buf_nr = vim.fn.bufnr('%')
+  vim.cmd(split_type)
+  fns.fn_or_command(nvimux.context.quickterm.command)
+  local buf_nr = vim.api.nvim_get_current_buf()
   vim.wo.wfw = true
   vim.b[buf_nr].nvimux_buf_orientation = split_type
   vim[nvimux.context.quickterm.scope].nvimux_last_buffer_id = buf_nr
 end
 
--- TODO port
 nvimux.term.toggle = function()
   -- TODO Allow external commands
-  local buf_nr = vim.g.nvimux_last_buffer_id
+  local buf_nr = vim[nvimux.context.quickterm.scope].nvimux_last_buffer_id
 
   if not buf_nr then
     nvimux.term.new_toggle()
   else
-    local id = math.floor(buf_nr)
-    local window = vim.fn.bufwinnr(id)
+    local window = vim.fn.bufwinid(buf_nr)
 
     if window == -1 then
-      if vim.fn.bufname(id) == '' then
-        nvimux.term.new_toggle()
-      else
+      if vim.api.nvim_buf_is_loaded(buf_nr) then
         local split_type = vim.b[buf_nr].nvimux_buf_orientation
-        vim.cmd(split_type .. ' | b' .. id)
+        vim.cmd(split_type)
+        vim.api.nvim_win_set_buf(0, buf_nr)
+      else
+        nvimux.term.new_toggle()
       end
     else
-      vim.cmd(window .. ' wincmd w | q | stopinsert')
+      vim.api.nvim_win_hide(window)
     end
   end
 end
@@ -100,18 +124,6 @@ nvimux.term_only = function(options)
   else
     print("Not on terminal")
   end
-end
-
-nvimux.set_last_tab = function(tabn)
-  if tabn == nil then
-    tabn = vim.fn.tabpagenr()
-  end
-
-  nvimux.context.state.last_tab = tabn
-end
-
-nvimux.go_to_last_tab = function()
-  vim.cmd((nvimux.context.state.last_tab or 1)  .. 'tabn')
 end
 
 -- ]]
@@ -169,15 +181,6 @@ local mappings = {
 setmetatable(vars, nvim_proxy)
 
 -- ]
-
-nvimux.do_autocmd = function(commands)
-  local au = {"augroup nvimux"}
-  for _, v in ipairs(commands) do
-    table.insert(au, "au! " .. v.event .. " " .. v.target .. " " .. v.cmd)
-  end
-  table.insert(au, "augroup END")
-  vim.fn.execute(au)
-end
 
 --- Configure nvimux to start with the supplied arguments
 -- It can be configured to use the defaults by only supplying an empty table.
