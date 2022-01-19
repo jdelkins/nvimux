@@ -27,35 +27,13 @@ __newindex = function(tbl, key, value)
 bindings.map_table = {}
 
 local win_cmd = function(create_window)
-      local select_buffer
-      vim.cmd(create_window)
-
-    if type(vars.new_window) == "function" then
-      select_buffer = vars.new_window
-    else
-      select_buffer = function()
-        vim.api.nvim_command(vars.new_window)
-      end
-    end
-
-    select_buffer()
+  vim.cmd(create_window)
+  fns.fn_or_command(nvimux.context.new_window)
 end
 
 local tab_cmd = function(create_window)
-  local select_buffer
   vim.cmd(create_window)
-
-  local selector = nvimux.context.new_tab or nvimux.context.new_window
-
-  if type(selector) == "function" then
-    select_buffer = selector
-  else
-    select_buffer = function()
-      vim.api.nvim_command(selector)
-    end
-  end
-
-  select_buffer()
+  fns.fn_or_command(nvimux.context.new_tab)
 end
 
 -- [[ Commands
